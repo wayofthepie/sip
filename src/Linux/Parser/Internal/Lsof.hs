@@ -4,23 +4,14 @@
 
     Currently the top-level parser __lsofp__ and the two parsers it calls
     (__fileSetp__ and __pidInfop__) parse the output of __lsof -F cfgpRuni__
-    and expect this output to be in the following order:
-
-    (1) pid
-    (2) gid
-    (3) ppid
-    (4) cmdname
-    (5) uid
-    (6) multiple rows of file information:
-        
-        (1) fd
-        (2) inode (may not be present)
-        (3) fileName
+    and expect this output to be in the order __pid__, __gid__, __ppid__, 
+    __cmdname__ and __uid__ proceeded by a repeating list of the following info: 
+    __fd__, __inode__ (which may not be present) and __fileName__.
 
     Example command to run the parser:
        
        @ 
-        liftM (parse lsofp "") $ readProcess "lsof" ["-n", "-F","cfgpRuni"] "" 
+       liftM (parse lsofp "") $ readProcess "lsof" ["-n", "-F","cfgpRuni"] ""
        @
 -}
 module Linux.Parser.Internal.Lsof where
