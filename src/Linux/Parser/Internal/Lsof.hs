@@ -1,10 +1,11 @@
 
 -- * Example usage
---     liftM (parse lsofp "") $ readProcess "lsof" ["-F","cgpRu"] "" 
+--     liftM (parse lsofp "") $ readProcess "lsof" ["-F","cgpRu"] ""
 
 module Linux.Parser.Internal.Lsof where
 
 import Control.Applicative hiding (many,(<|>))
+import Data.Graph.Inductive
 import System.Process
 import Text.Parsec
 import Text.Parsec.String
@@ -41,28 +42,66 @@ data LsofCST = LsofCST {
     } deriving (Eq, Show)
 -}
 
-lsofp :: Parser [ ( Int, ( Int, Int, String, Int ) ) ]
-lsofp = manyTill ( (,) <$> pidp <* newline <*> pidInfop ) eof
+{- data NodeLabel = FDType String | File String deriving (Eq, Show)
+data PIDInfo = PIDInfo Int deriving (Eq, Show)
+
+fdTypeLbl :: String -> NodeLabel
+fdTypeLbl n = FDType n
 
 
-pidInfop :: Parser ( Int, Int, String, Int )
-pidInfop = (,,,) 
-        <$> procGroupIdp <* newline 
+fileLbl :: String -> NodeLabel
+fileLbl f = File f
+-}
+
+data PIDInfo = PIDInfo {
+        _pid    :: Int,
+        _gid    :: Int,
+        _ppid   :: Int,
+        _cmdname:: String,
+        _uid    :: Int
+    } deriving (Eq, Show)
+
+data FileInfo = FileInfo {
+        _fdp        :: String,
+        _fileName   :: String
+    } deriving (Eq, Show)
+
+
+lsofp :: Parser [ ( PIDInfo, [FileInfo] ) ]
+lsofp = manyTill ( (,) <$> pidInfop <*> many fileSetp ) eof
+
+
+fileSetp :: Parser FileInfo
+fileSetp = FileInfo <$> fdp <* newline <*> fileNamep <* newline
+
+
+pidInfop :: Parser PIDInfo
+pidInfop = PIDInfo
+        <$> pidp <* newline
+        <*> procGroupIdp <* newline
         <*> ppidp <* newline
         <*> procCmdNamep <* newline
         <*> procUserIdp <* newline
 
 
 procCmdNamep :: Parser String
-procCmdNamep = char 'c' *> many ( alphaNum <|> oneOf "/:_-()" )
+procCmdNamep = char 'c' *> many ( alphaNum <|> oneOf "/:_-()." )
+
+
+fdp :: Parser String
+fdp = char 'f' *> many alphaNum
 
 
 procGroupIdp :: Parser Int
-procGroupIdp = char 'g' *> numStrToIntp 
+procGroupIdp = char 'g' *> numStrToIntp
+
+
+fileNamep :: Parser String
+fileNamep = char 'n' *> many ( alphaNum <|> oneOf "/:_-().[]*:=>@" )
 
 
 pidp :: Parser Int
-pidp = char 'p' *> numStrToIntp 
+pidp = char 'p' *> numStrToIntp
 
 
 -- | ppidp : parses a ppid
