@@ -1,4 +1,7 @@
 
+-- * Example usage
+--     liftM (parse lsofp "") $ readProcess "lsof" ["-F","cgpRu"] "" 
+
 module Linux.Parser.Internal.Lsof where
 
 import Control.Applicative hiding (many,(<|>))
