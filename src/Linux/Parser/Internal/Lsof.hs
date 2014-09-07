@@ -1,7 +1,28 @@
+{-|
+    Module          : Linux.Parser.Internal.Lsof
+    Descripition    : Parsers for lsof output
 
--- * Example usage
---      liftM (parse lsofp "") $ readProcess "lsof" ["-n", "-F","cfgpRuni"] ""
+    Currently the top-level parser __lsofp__ and the two parsers it calls
+    (__fileSetp__ and __pidInfop__) parse the output of __lsof -F cfgpRuni__
+    and expect this output to be in the following order:
 
+    (1) pid
+    (2) gid
+    (3) ppid
+    (4) cmdname
+    (5) uid
+    (6) multiple rows of file information:
+        
+        (1) fd
+        (2) inode (may not be present)
+        (3) fileName
+
+    Example command to run the parser:
+       
+       @ 
+        liftM (parse lsofp "") $ readProcess "lsof" ["-n", "-F","cfgpRuni"] "" 
+       @
+-}
 module Linux.Parser.Internal.Lsof where
 
 import Control.Applicative hiding (many,(<|>))
