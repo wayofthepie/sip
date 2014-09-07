@@ -3,7 +3,7 @@
 
 name:                sip
 version:             0.0.0.1
-synopsis:            Systems Information Parser - functional parsers for multiple systems analysis programs.
+synopsis:            Systems Information Parser - parsers for multiple systems analysis programs.
 -- description:         
 -- license:             
 license-file:        LICENSE
@@ -16,7 +16,10 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:      Linux.Parser.Internal.Lsof 
+  exposed-modules:      Linux.Graph.SystemInfo,
+                        Linux.Parser.Lsof,
+                        Linux.Parser.Internal.Lsof
+
   -- other-modules:       
   -- other-extensions:    
   build-depends:        base >=4.7 && <4.8,

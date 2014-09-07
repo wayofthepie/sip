@@ -1,10 +1,14 @@
 module Linux.Parser.Lsof where
 
 import Control.Applicative hiding (many,(<|>))
+import Data.Graph.Inductive
 import Text.Parsec
 import Text.Parsec.String
 
 import Linux.Parser.Internal.Lsof
+
+
+type LsofCST = [ ( PIDInfo, [FileInfo] ) ] 
 
 data PIDInfo = PIDInfo {
         _pid    :: Int,
@@ -22,7 +26,7 @@ data FileInfo = FileInfo {
     } deriving (Eq, Show)
 
 
-lsofp :: Parser [ ( PIDInfo, [FileInfo] ) ]
+lsofp :: Parser LsofCST 
 lsofp = manyTill ( (,) <$> pidInfop <*> many fileSetp ) eof
 
 
@@ -40,5 +44,4 @@ pidInfop = PIDInfo
         <*> ppidp <* newline
         <*> procCmdNamep <* newline
         <*> procUserIdp <* newline
-
 
