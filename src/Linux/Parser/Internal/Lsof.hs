@@ -62,7 +62,8 @@ data PIDInfo = PIDInfo {
     } deriving (Eq, Show)
 
 data FileInfo = FileInfo {
-        _fdp        :: String,
+        _fd         :: String,
+        _inode      :: Int,
         _fileName   :: String
     } deriving (Eq, Show)
 
@@ -72,8 +73,11 @@ lsofp = manyTill ( (,) <$> pidInfop <*> many fileSetp ) eof
 
 
 fileSetp :: Parser FileInfo
-fileSetp = FileInfo <$> fdp <* newline <*> fileNamep <* newline
-
+fileSetp = FileInfo
+    <$> fdp <* newline 
+    <*> option (-1) ( inodep <* newline ) 
+    <*> fileNamep <* newline
+    
 
 pidInfop :: Parser PIDInfo
 pidInfop = PIDInfo
@@ -94,6 +98,10 @@ fdp = char 'f' *> many alphaNum
 
 procGroupIdp :: Parser Int
 procGroupIdp = char 'g' *> numStrToIntp
+
+
+inodep :: Parser Int
+inodep = char 'i' *> numStrToIntp
 
 
 fileNamep :: Parser String
