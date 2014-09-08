@@ -1,4 +1,21 @@
-module Linux.Parser.Lsof where
+module Linux.Parser.Lsof (
+        LsofCST,
+        PIDInfo (),
+        FileInfo (),
+        
+        lsofp,
+
+        pid,
+        gid,
+        ppid,
+        cmdname,
+        uid,
+
+        fd,
+        inode,
+        fname
+    ) where
+
 
 import Control.Applicative hiding (many,(<|>))
 import Data.Graph.Inductive
@@ -11,22 +28,59 @@ import Linux.Parser.Internal.Lsof
 type LsofCST = [ ( PIDInfo, [FileInfo] ) ] 
 
 data PIDInfo = PIDInfo {
-        _pid    :: Int,
-        _gid    :: Int,
-        _ppid   :: Int,
-        _cmdname:: String,
-        _uid    :: Int
+        _pid    :: Int,     -- ^ Process ID
+        _gid    :: Int,     -- ^ Process group ID
+        _ppid   :: Int,     -- ^ Parent process ID
+        _cmdname:: String,  -- ^ Process command name
+        _uid    :: Int      -- ^ Process user id
     } deriving (Eq, Show)
+
+
+pid :: PIDInfo -> Int
+pid = _pid
+
+
+gid :: PIDInfo -> Int
+gid = _gid
+
+
+ppid :: PIDInfo -> Int
+ppid = _ppid
+
+
+cmdname :: PIDInfo -> String
+cmdname = _cmdname
+
+
+uid :: PIDInfo -> Int
+uid = _uid
+
 
 
 data FileInfo = FileInfo {
-        _fd         :: String,
-        _inode      :: Int,
-        _fileName   :: String
+        _fd         :: String,  -- ^ File descriptor 
+        _inode      :: Int,     -- ^ inode number
+        _fname      :: String   -- ^ File name corresponding to inode number
     } deriving (Eq, Show)
 
 
-lsofp :: Parser LsofCST 
+fd :: FileInfo -> String
+fd = _fd
+
+
+inode :: FileInfo -> Int
+inode = _inode
+
+
+fname :: FileInfo -> String
+fname = _fname
+
+
+--------------------------------------------------------------------------------
+-- High level parsers
+--------------------------------------------------------------------------------
+
+lsofp :: Parser LsofCST
 lsofp = manyTill ( (,) <$> pidInfop <*> many fileSetp ) eof
 
 
