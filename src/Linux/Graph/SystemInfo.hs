@@ -15,7 +15,7 @@ lsofToGraph :: [(PIDInfo, [FileInfo])] -> Gr NodeLabel String
 lsofToGraph = lsofToGraph' empty 
 
 
-lsofToGraph' :: Gr NodeLabel String -> LsofCST -> Gr NodeLabel String
+lsofToGraph' :: Gr NodeLabel String -> [(PIDInfo, [FileInfo])]-> Gr NodeLabel String
 lsofToGraph' g []   = g
 lsofToGraph' g xs   = run_ empty $ mapM genNodeMapM xs
 
