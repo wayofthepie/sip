@@ -1,5 +1,5 @@
-module Linux.Parser.Lsof (
-        LsofCST,
+
+module Linux.Parser.Lsof {-(
         PIDInfo (),
         FileInfo (),
         
@@ -14,7 +14,8 @@ module Linux.Parser.Lsof (
         fd,
         inode,
         fname
-    ) where
+    ) -}
+ where
 
 
 import Control.Applicative hiding (many,(<|>))
@@ -33,7 +34,7 @@ data PIDInfo = PIDInfo {
         _ppid   :: Int,     -- ^ Parent process ID
         _cmdname:: String,  -- ^ Process command name
         _uid    :: Int      -- ^ Process user id
-    } deriving (Eq, Show)
+    } deriving (Eq, Ord, Show)
 
 
 pid :: PIDInfo -> Int
@@ -61,7 +62,7 @@ data FileInfo = FileInfo {
         _fd         :: String,  -- ^ File descriptor 
         _inode      :: Int,     -- ^ inode number
         _fname      :: String   -- ^ File name corresponding to inode number
-    } deriving (Eq, Show)
+    } deriving (Eq, Ord, Show)
 
 
 fd :: FileInfo -> String
