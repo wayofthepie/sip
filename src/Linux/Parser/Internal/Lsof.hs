@@ -2,12 +2,6 @@
     Module          : Linux.Parser.Internal.Lsof
     Descripition    : Parsers for lsof output
 
-    Currently the top-level parser __lsofp__ and the two parsers it calls
-    (__fileSetp__ and __pidInfop__) parse the output of __lsof -F cfgpRuni__
-    and expect this output to be in the order __pid__, __gid__, __ppid__, 
-    __cmdname__ and __uid__ proceeded by a repeating list of the following info: 
-    __fd__, __inode__ (which may not be present) and __fileName__.
-
     Example command to run the parser:
        
        @ 
