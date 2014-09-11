@@ -14,11 +14,12 @@ import Linux.Parser.Lsof
 data NodeLabel = PID PIDInfo | File FileInfo deriving (Eq, Ord, Show)
 
 
--- | lsofToGraph : the graph of the list l (pidinfo and related fileinfo) constructed by 
+-- | lsofToGraph l : the graph of the list l (PIDInfo and related FileInfo) constructed by 
 --      mapping pidinfo nodes to fileinfo nodes with the filedescriptor type (e.g. mem, cwd) 
 --      as edges
 lsofToGraph :: [(PIDInfo, [FileInfo])] -> Gr NodeLabel String
 lsofToGraph = lsofToGraph' empty 
+
 
 -- | lsofToGraph' g l : auxiliary function for lsofToGraph 
 lsofToGraph' :: Gr NodeLabel String -> [(PIDInfo, [FileInfo])]-> Gr NodeLabel String
