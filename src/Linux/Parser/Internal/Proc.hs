@@ -12,13 +12,10 @@ module Linux.Parser.Internal.Proc (
     ) where
 
 import Control.Applicative
-import Control.Monad.IO.Class
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.Maybe
 import Data.ByteString hiding (takeWhile)
-import System.IO
-import System.IO.Streams.Attoparsec
 
 import Prelude hiding (takeWhile)
 
