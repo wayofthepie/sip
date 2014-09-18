@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-|
     Module          : Linux.Parser.Internal.Proc
-    Descripition    : Parsers for the /proc vfs
+    Descripition    : Parsers for the /proc vfs.
+
+    The examples below use the __io-streams__ library.
 -}
 
 module Linux.Parser.Internal.Proc ( 
@@ -21,13 +23,12 @@ import System.IO.Streams.Attoparsec
 import Prelude hiding (takeWhile)
 
 -------------------------------------------------------------------------------
--- | Parser for \/proc\/meminfo. Example usage (this example makes use of the 
--- __io-streams__ library):
+-- | Parser for \/proc\/meminfo.
 --
 -- @
--- openFile "\/proc\/meminfo" ReadMode >>= 
---     \h -> handleToInputStream h >>= 
---         \is -> parseFromStream  meminfop is
+--  openFile "\/proc\/meminfo" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream  meminfop is
 --
 -- [("MemTotal","4052076",Just "kB"),("MemFree","3450628",Just "kB"), ...] 
 -- @
@@ -57,7 +58,15 @@ unitp = option Nothing (string "kB" >>= \p -> return $ Just p)
 
 
 -------------------------------------------------------------------------------
--- | Parser for \/proc\/[pid]\/stat. 
+-- | Parser for \/proc\/[pid]\/stat.
+--
+-- @
+--  openFile "/proc/1/stat" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream procstatp is
+--
+--  ["1","(systemd)",\"S\","0","1", ...]
+-- @
 procstatp :: Parser [ByteString]
 procstatp = manyTill (takeWhile ( inClass "a-zA-z0-9()-" ) <* space) endOfInput
 
