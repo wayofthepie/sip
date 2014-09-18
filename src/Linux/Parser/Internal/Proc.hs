@@ -22,7 +22,7 @@ import Data.ByteString hiding (takeWhile)
 import Prelude hiding (takeWhile)
 
 -------------------------------------------------------------------------------
--- | Parser for \/proc\/meminfo.
+-- | Parser for __\/proc\/meminfo__.
 --
 -- @
 --  openFile "\/proc\/meminfo" ReadMode >>= 
@@ -58,7 +58,7 @@ unitp = option Nothing (string "kB" >>= \p -> return $ Just p)
 
 
 -------------------------------------------------------------------------------
--- | Parser for \/proc\/[pid]\/stat.
+-- | Parser for __\/proc\/[pid]\/stat__.
 --
 -- @
 --  openFile "\/proc\/1\/stat" ReadMode >>= 
@@ -73,7 +73,7 @@ procstatp = manyTill (takeWhile ( inClass "a-zA-z0-9()-" ) <* space) endOfInput
 
 
 ------------------------------------------------------------------------------
--- | Parser for \/proc\/loadavg. Only parses the 1, 5 and 15 minute load 
+-- | Parser for __\/proc\/loadavg__. Only parses the 1, 5 and 15 minute load 
 -- average, discards the fourth and fifth fields (kernel scheduling entities 
 -- and latest PID assigned).
 --
@@ -90,9 +90,17 @@ loadavgp = (,,) <$> doublep <*> doublep <*> doublep
 
 
 ------------------------------------------------------------------------------
--- | Parser for \/proc\/uptime. The first field is the uptime of the system 
--- (seconds), the second is the amount of time spent in teh idle process
+-- | Parser for __\/proc\/uptime__. The first field is the uptime of the system 
+-- (seconds), the second is the amount of time spent in the idle process
 -- (seconds).
+-- 
+-- @   
+--  openFile "/proc/uptime" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream uptimep is
+--
+--  ("13048.12","78085.17")
+-- @
 uptimep :: Parser (ByteString, ByteString)
 uptimep = (,) <$> doublep <*> doublep 
 
