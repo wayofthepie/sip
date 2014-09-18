@@ -76,9 +76,9 @@ procstatp = manyTill (takeWhile ( inClass "a-zA-z0-9()-" ) <* space) endOfInput
 -- and latest PID assigned).
 --
 -- @
---  openFile "/proc/loadavg" ReadMode 
---      >>= \h -> handleToInputStream h 
---          >>= \is -> parseFromStream loadavgp is
+--  openFile "/proc/loadavg" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream loadavgp is
 --  
 --  ("0.00","0.01","0.05")
 -- @
