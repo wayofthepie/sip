@@ -8,7 +8,8 @@
 
 module Linux.Parser.Internal.Proc ( 
         meminfop,
-        procstatp
+        procstatp,
+        loadavgp
     ) where
 
 import Control.Applicative
@@ -68,3 +69,19 @@ procstatp :: Parser [ByteString]
 procstatp = manyTill (takeWhile ( inClass "a-zA-z0-9()-" ) <* space) endOfInput
 
 
+
+------------------------------------------------------------------------------
+-- | Parser for \/proc\/loadavg. Only parses the 1, 5 and 15 minute load 
+-- average, discards the fourth and fifth fields (kernel scheduling entities 
+-- and latest PID assigned).
+--
+-- @
+--  openFile "/proc/loadavg" ReadMode 
+--      >>= \h -> handleToInputStream h 
+--          >>= \is -> parseFromStream loadavgp is
+--  
+--  ("0.00","0.01","0.05")
+-- @
+loadavgp :: Parser (ByteString, ByteString, ByteString)
+loadavgp = (,,) <$> doublep <*> doublep <*> doublep
+    where doublep = takeWhile ( inClass "0-9." ) <* space
