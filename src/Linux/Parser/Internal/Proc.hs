@@ -9,7 +9,8 @@
 module Linux.Parser.Internal.Proc ( 
         meminfop,
         procstatp,
-        loadavgp
+        loadavgp,
+        uptimep
     ) where
 
 import Control.Applicative
@@ -55,6 +56,7 @@ unitp :: Parser (Maybe ByteString)
 unitp = option Nothing (string "kB" >>= \p -> return $ Just p)
 
 
+
 -------------------------------------------------------------------------------
 -- | Parser for \/proc\/[pid]\/stat.
 --
@@ -84,4 +86,22 @@ procstatp = manyTill (takeWhile ( inClass "a-zA-z0-9()-" ) <* space) endOfInput
 -- @
 loadavgp :: Parser (ByteString, ByteString, ByteString)
 loadavgp = (,,) <$> doublep <*> doublep <*> doublep
-    where doublep = takeWhile ( inClass "0-9." ) <* space
+
+
+
+------------------------------------------------------------------------------
+-- | Parser for \/proc\/uptime. The first field is the uptime of the system 
+-- (seconds), the second is the amount of time spent in teh idle process
+-- (seconds).
+uptimep :: Parser (ByteString, ByteString)
+uptimep = (,) <$> doublep <*> doublep 
+
+
+
+------------------------------------------------------------------------------
+-- | Helper functions
+
+doublep :: Parser ByteString
+doublep = takeWhile ( inClass "0-9." ) <* space
+
+
