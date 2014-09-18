@@ -59,7 +59,7 @@ unitp = option Nothing (string "kB" >>= \p -> return $ Just p)
 -- | Parser for \/proc\/[pid]\/stat.
 --
 -- @
---  openFile "/proc/1/stat" ReadMode >>= 
+--  openFile "\/proc\/1\/stat" ReadMode >>= 
 --      \h -> handleToInputStream h >>= 
 --          \is -> parseFromStream procstatp is
 --
@@ -76,7 +76,7 @@ procstatp = manyTill (takeWhile ( inClass "a-zA-z0-9()-" ) <* space) endOfInput
 -- and latest PID assigned).
 --
 -- @
---  openFile "/proc/loadavg" ReadMode >>= 
+--  openFile "\/proc\/loadavg" ReadMode >>= 
 --      \h -> handleToInputStream h >>= 
 --          \is -> parseFromStream loadavgp is
 --  
