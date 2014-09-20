@@ -12,14 +12,16 @@ module Linux.Parser.Internal.Proc (
         loadavgp,
         uptimep,
         commp,
-        iop
+        iop,
+        mapsrowp
     ) where
 
 import Control.Applicative
+import qualified Data.ByteString.Char8 as BC
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.Maybe
-import Data.ByteString hiding (takeWhile)
+import Data.ByteString hiding (takeWhile, count)
 
 import Prelude hiding (takeWhile)
 
@@ -107,10 +109,40 @@ iop = manyTill ((,) <$> idp <*> ( skipspacep *> intp <* skipMany space )  ) endO
     
 
 
+-------------------------------------------------------------------------------
+---- | Parser for __\/proc\/comm__.
+data MappedMemory = MM {
+       _address :: ByteString,
+       _perms   :: ByteString, 
+       _offset  :: ByteString,
+       _dev     :: ByteString,
+       _inode   :: ByteString,
+       _pathname:: ByteString        
+    } deriving (Eq, Show)
+
+{-mapsp :: Parser [MappedMemory]
+mapsp = manyTill 
+    <$> ( MM <$> ( hexadecimal <* char '-' *> hexadecimal) <* skipspacep
+    <*> (liftA pack $ count 4 $ choice [char '-', char 'r', char 'w', char 'x', char 'p' ] ))
+    endOfInputi-}
+
+mapsrowp :: Parser MappedMemory
+mapsrowp = MM 
+    <$> ( hdp <* char '-' *> hdp) <* skipspacep
+    <*> ( takeWhile $ inClass "-rwxp" ) <* skipspacep
+    <*> intp <* skipspacep
+    <*> ( (intp >>= \i -> char ':' >>= \c -> return $ BC.snoc i c ) >>= 
+            \bs -> intp >>= \i -> return $ BC.append bs i ) <* skipspacep 
+    <*> intp <* skipspacep
+    <*> takeWhile ( inClass "a-zA-Z0-9:/" )
+
+hdp = takeWhile $ inClass "0-9a-f"
+--( do i <- intp; c <- char ':'; return $ BC.snoc i c )
+
 -----------------------------------------------------------------------------
 -- | Helper functions
 
--- | Skip only " "
+-- | Skip only zero or many " "
 skipspacep :: Parser ()
 skipspacep =  (skipMany $ char ' ')
 
