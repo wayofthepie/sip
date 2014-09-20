@@ -6,7 +6,16 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc {-( 
+module Linux.Parser.Internal.Proc (
+        -- * Data Types
+        MappedMemory (),
+        mmAddress,
+        mmPerms,
+        mmOffset,
+        mmDev,
+        mmInode,
+        mmPathname,
+        -- * Parsers
         meminfop,
         procstatp,
         loadavgp,
@@ -14,8 +23,7 @@ module Linux.Parser.Internal.Proc {-(
         commp,
         iop,
         mapsp,
-        mapsrowp
-    )-} where
+    ) where
 
 import Control.Applicative hiding (empty)
 import qualified Data.ByteString.Char8 as BC
@@ -25,6 +33,41 @@ import Data.Maybe
 import Data.ByteString hiding (takeWhile, count)
 
 import Prelude hiding (takeWhile)
+
+-------------------------------------------------------------------------------
+-- | Data type for \/proc\/[pid]\/maps
+data MappedMemory = MM {
+
+        _address :: (ByteString, ByteString),        
+        -- ^ Memory address in the form (start-address, end-address)
+        
+        _perms   :: ByteString,              
+        _offset  :: ByteString,       
+
+        _dev     :: (ByteString, ByteString),
+        -- ^ Device number in the form (Major num, Minor num)        
+
+        _inode   :: ByteString,
+        _pathname:: Maybe ByteString        
+    } deriving (Eq, Show)
+
+
+
+mmAddress   :: MappedMemory -> (ByteString, ByteString)
+mmPerms     :: MappedMemory ->ByteString
+mmOffset    :: MappedMemory ->ByteString
+mmDev       :: MappedMemory -> (ByteString, ByteString)
+mmInode     :: MappedMemory -> ByteString
+mmPathname  :: MappedMemory -> Maybe ByteString
+
+mmAddress    = _address
+mmPerms     = _perms
+mmOffset    = _offset
+mmDev       = _dev
+mmInode     = _inode
+mmPathname  = _pathname
+
+
 
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/meminfo__.
@@ -82,7 +125,7 @@ loadavgp = (,,) <$> doublep <*> doublep <*> doublep
 -- (seconds).
 -- 
 -- @   
---  openFile "/proc/uptime" ReadMode >>= 
+--  openFile "\/proc\/uptime" ReadMode >>= 
 --      \h -> handleToInputStream h >>= 
 --          \is -> parseFromStream uptimep is
 --
@@ -94,33 +137,46 @@ uptimep = (,) <$> doublep <*> doublep
 
 
 ------------------------------------------------------------------------------
----- | Parser for __\/proc\/comm__.
+-- | Parser for __\/proc\/comm__.
+-- 
+-- @
+--  openFile "\/proc\/1\/comm" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream (commp) is
+--  
+--  "systemd"
+-- @
 commp :: Parser ByteString
 commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 
 
 
 -------------------------------------------------------------------------------
----- | Parser for __\/proc\/comm__.
+-- | Parser for __\/proc\/comm__.
+--
+-- @
+--  openFile "\/proc\/1\/io" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream (iop) is
+--  
+--  [("rchar","12983399"),("wchar","14957379"), ...]
+--
+-- @
 iop :: Parser [(ByteString, ByteString)]
 iop = manyTill ((,) <$> idp <*> ( skipspacep *> intp <* skipMany space )  ) endOfInput
     
 
 
 -------------------------------------------------------------------------------
----- | Parser for __\/proc\/comm__.
-data MappedMemory = MM {
-       _address :: (ByteString, ByteString),-- (Start addr, End addr)
-       _perms   :: ByteString,              
-       _offset  :: ByteString,
-       _dev     :: (ByteString, ByteString),-- (Major num, Minor num)
-       _inode   :: ByteString,
-       _pathname:: Maybe ByteString        
-    } deriving (Eq, Show)
-
-
-
--- | Parser for \/proc\/[pid]\/maps
+-- | Parser for \/proc\/[pid]\/maps.
+--
+-- @
+--  openFile "\/proc\/1\/maps" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream mapsp is
+-- 
+--  [MM {_address = ("7f9c51069000","7f9c5107e000"), _perms = "r-xp", ...]
+-- @
 mapsp :: Parser [MappedMemory]
 mapsp = manyTill ( mapsrowp <* endOfLine ) endOfInput
 
@@ -130,33 +186,31 @@ mapsp = manyTill ( mapsrowp <* endOfLine ) endOfInput
 mapsrowp :: Parser MappedMemory
 mapsrowp = MM 
     <$> addressp <* skipspacep
-    <*> ( takeWhile $ inClass "-rwxp" ) <* skipspacep
+    <*> permp <* skipspacep
     <*> hdp <* skipspacep
     <*> devicep <* skipspacep 
     <*> intp <* skipspacep
-    <*> ( peekChar >>= \c -> case c of  
-                Just '\n'   -> return Nothing 
-                _           -> liftA Just pathnamep ) 
+    <*> pathnamep 
     where
         addressp :: Parser (ByteString, ByteString)
-        addressp    = (,) <$> ( hdp <* char '-' ) <*> hdp
+        addressp = (,) <$> ( hdp <* char '-' ) <*> hdp
         
+        permp :: Parser ByteString
+        permp = takeWhile $ inClass "-rwxp" 
+
         devicep :: Parser (ByteString, ByteString)
-        devicep     = (,) <$> ( intp <* char ':' ) <*> intp
+        devicep = (,) <$> ( intp <* char ':' ) <*> intp
     
-        pathnamep :: Parser ByteString
-        pathnamep   = takeWhile ( inClass "a-zA-Z0-9:/.[]-" )
-
-
-
--- | Parse hexadecimal
-hdp :: Parser ByteString
-hdp = takeWhile $ inClass "0-9a-f"
+        pathnamep :: Parser (Maybe ByteString)
+        pathnamep = peekChar >>= \c -> case c of  
+                Just '\n'   -> return Nothing 
+                _           -> liftA Just $ 
+                                takeWhile ( inClass "a-zA-Z0-9:/.[]-" )
 
 
 
 -----------------------------------------------------------------------------
--- | Helper functions
+-- * Helper functions
 
 -- | Skip only zero or many " "
 skipspacep :: Parser ()
@@ -180,5 +234,10 @@ unitp = option Nothing (string "kB" >>= \p -> return $ Just p)
 
 doublep :: Parser ByteString
 doublep = takeWhile ( inClass "0-9." ) <* space
+
+
+-- | Parse hexadecimal
+hdp :: Parser ByteString
+hdp = takeWhile $ inClass "0-9a-f"
 
 
