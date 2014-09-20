@@ -11,7 +11,8 @@ module Linux.Parser.Internal.Proc (
         procstatp,
         loadavgp,
         uptimep,
-        commp
+        commp,
+        iop
     ) where
 
 import Control.Applicative
@@ -35,26 +36,11 @@ import Prelude hiding (takeWhile)
 meminfop :: Parser [(ByteString, ByteString, Maybe ByteString)]
 meminfop = manyTill ((,,) 
     <$> idp 
-    <*> ( skipspacep *> valp <* skipspacep ) 
+    <*> ( skipspacep *> intp <* skipspacep ) 
     <*> unitp <* skipMany space) endOfInput
 
 
 -- | Internal parsers for meminfo
-
-skipspacep :: Parser ()
-skipspacep =  (skipMany $ char ' ')
-
-
-idp :: Parser ByteString
-idp = takeWhile ( inClass "a-zA-z0-9()_" ) <* (skipMany $ char ' ') <*  char ':'
-
-
-valp :: Parser ByteString
-valp = takeWhile $ inClass "0-9" 
-    
-
-unitp :: Parser (Maybe ByteString)
-unitp = option Nothing (string "kB" >>= \p -> return $ Just p)
 
 
 
@@ -114,8 +100,35 @@ commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 
 
 
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+---- | Parser for __\/proc\/comm__.
+iop :: Parser [(ByteString, ByteString)]
+iop = manyTill ((,) <$> idp <*> ( skipspacep *> intp <* skipMany space )  ) endOfInput
+    
+
+
+-----------------------------------------------------------------------------
 -- | Helper functions
+
+-- | Skip only " "
+skipspacep :: Parser ()
+skipspacep =  (skipMany $ char ' ')
+
+
+-- | Parse the characters a-z A-Z 0-9 ( ) _ until a ":" is reached
+idp :: Parser ByteString
+idp = takeWhile ( inClass "a-zA-z0-9()_" ) <* (skipMany $ char ' ') <*  char ':'
+
+
+-- | Parse and integer
+intp :: Parser ByteString
+intp = takeWhile $ inClass "0-9" 
+    
+
+-- | Parse kB
+unitp :: Parser (Maybe ByteString)
+unitp = option Nothing (string "kB" >>= \p -> return $ Just p)
+
 
 doublep :: Parser ByteString
 doublep = takeWhile ( inClass "0-9." ) <* space
