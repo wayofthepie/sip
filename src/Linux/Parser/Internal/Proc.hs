@@ -137,7 +137,7 @@ uptimep = (,) <$> doublep <*> doublep
 
 
 ------------------------------------------------------------------------------
--- | Parser for __\/proc\/comm__.
+-- | Parser for __\/proc\/[pid]\/comm__.
 -- 
 -- @
 --  openFile "\/proc\/1\/comm" ReadMode >>= 
@@ -152,7 +152,7 @@ commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 
 
 -------------------------------------------------------------------------------
--- | Parser for __\/proc\/comm__.
+-- | Parser for __\/proc\/[pid]\/io__.
 --
 -- @
 --  openFile "\/proc\/1\/io" ReadMode >>= 
@@ -168,7 +168,7 @@ iop = manyTill ((,) <$> idp <*> ( skipspacep *> intp <* skipMany space )  ) endO
 
 
 -------------------------------------------------------------------------------
--- | Parser for \/proc\/[pid]\/maps.
+-- | Parser for __\/proc\/[pid]\/maps__.
 --
 -- @
 --  openFile "\/proc\/1\/maps" ReadMode >>= 
