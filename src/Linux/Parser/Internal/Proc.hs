@@ -10,7 +10,8 @@ module Linux.Parser.Internal.Proc (
         meminfop,
         procstatp,
         loadavgp,
-        uptimep
+        uptimep,
+        commp
     ) where
 
 import Control.Applicative
@@ -103,6 +104,13 @@ loadavgp = (,,) <$> doublep <*> doublep <*> doublep
 -- @
 uptimep :: Parser (ByteString, ByteString)
 uptimep = (,) <$> doublep <*> doublep 
+
+
+
+------------------------------------------------------------------------------
+---- | Parser for __\/proc\/comm__.
+commp :: Parser ByteString
+commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 
 
 
