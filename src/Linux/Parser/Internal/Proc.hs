@@ -23,6 +23,7 @@ module Linux.Parser.Internal.Proc (
         commp,
         iop,
         mapsp,
+        environp
     ) where
 
 import Control.Applicative hiding (empty)
@@ -206,6 +207,27 @@ mapsrowp = MM
                 Just '\n'   -> return Nothing 
                 _           -> liftA Just $ 
                                 takeWhile ( inClass "a-zA-Z0-9:/.[]-" )
+
+
+
+-----------------------------------------------------------------------------
+-- | Parser for __\/proc\/[pid]\/environ__.
+--
+-- @
+--  openFile "/proc/373/environ" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream environp is
+--
+--  [("LANG","en_IE.UTF-8"),("PATH","/usr/local/sbin"), ...]
+-- @
+
+environp :: Parser [(ByteString, ByteString)]
+environp = sepBy environrowp $ char '\NUL'
+
+environrowp :: Parser (ByteString, ByteString)
+environrowp = (,) <$> 
+    ( ( takeTill $ inClass "=" ) <* char '=' ) 
+    <*> ( takeTill $ inClass "\NUL" )
 
 
 
