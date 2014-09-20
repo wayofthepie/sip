@@ -6,17 +6,18 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc ( 
+module Linux.Parser.Internal.Proc {-( 
         meminfop,
         procstatp,
         loadavgp,
         uptimep,
         commp,
         iop,
+        mapsp,
         mapsrowp
-    ) where
+    )-} where
 
-import Control.Applicative
+import Control.Applicative hiding (empty)
 import qualified Data.ByteString.Char8 as BC
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
@@ -40,9 +41,6 @@ meminfop = manyTill ((,,)
     <$> idp 
     <*> ( skipspacep *> intp <* skipspacep ) 
     <*> unitp <* skipMany space) endOfInput
-
-
--- | Internal parsers for meminfo
 
 
 
@@ -112,32 +110,50 @@ iop = manyTill ((,) <$> idp <*> ( skipspacep *> intp <* skipMany space )  ) endO
 -------------------------------------------------------------------------------
 ---- | Parser for __\/proc\/comm__.
 data MappedMemory = MM {
-       _address :: ByteString,
-       _perms   :: ByteString, 
+       _address :: (ByteString, ByteString),-- (Start addr, End addr)
+       _perms   :: ByteString,              
        _offset  :: ByteString,
-       _dev     :: ByteString,
+       _dev     :: (ByteString, ByteString),-- (Major num, Minor num)
        _inode   :: ByteString,
-       _pathname:: ByteString        
+       _pathname:: Maybe ByteString        
     } deriving (Eq, Show)
 
-{-mapsp :: Parser [MappedMemory]
-mapsp = manyTill 
-    <$> ( MM <$> ( hexadecimal <* char '-' *> hexadecimal) <* skipspacep
-    <*> (liftA pack $ count 4 $ choice [char '-', char 'r', char 'w', char 'x', char 'p' ] ))
-    endOfInputi-}
 
+
+-- | Parser for \/proc\/[pid]\/maps
+mapsp :: Parser [MappedMemory]
+mapsp = manyTill ( mapsrowp <* endOfLine ) endOfInput
+
+
+
+-- | Parse a row of \/proc\/[pid]\/maps
 mapsrowp :: Parser MappedMemory
 mapsrowp = MM 
-    <$> ( hdp <* char '-' *> hdp) <* skipspacep
+    <$> addressp <* skipspacep
     <*> ( takeWhile $ inClass "-rwxp" ) <* skipspacep
+    <*> hdp <* skipspacep
+    <*> devicep <* skipspacep 
     <*> intp <* skipspacep
-    <*> ( (intp >>= \i -> char ':' >>= \c -> return $ BC.snoc i c ) >>= 
-            \bs -> intp >>= \i -> return $ BC.append bs i ) <* skipspacep 
-    <*> intp <* skipspacep
-    <*> takeWhile ( inClass "a-zA-Z0-9:/" )
+    <*> ( peekChar >>= \c -> case c of  
+                Just '\n'   -> return Nothing 
+                _           -> liftA Just pathnamep ) 
+    where
+        addressp :: Parser (ByteString, ByteString)
+        addressp    = (,) <$> ( hdp <* char '-' ) <*> hdp
+        
+        devicep :: Parser (ByteString, ByteString)
+        devicep     = (,) <$> ( intp <* char ':' ) <*> intp
+    
+        pathnamep :: Parser ByteString
+        pathnamep   = takeWhile ( inClass "a-zA-Z0-9:/.[]-" )
 
+
+
+-- | Parse hexadecimal
+hdp :: Parser ByteString
 hdp = takeWhile $ inClass "0-9a-f"
---( do i <- intp; c <- char ':'; return $ BC.snoc i c )
+
+
 
 -----------------------------------------------------------------------------
 -- | Helper functions
