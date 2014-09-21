@@ -64,7 +64,6 @@ module Linux.Parser.Internal.Proc (
     ) where
 
 import Control.Applicative hiding (empty)
-import Control.Monad.Cont
 import qualified Data.ByteString.Char8 as BC
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
@@ -72,6 +71,8 @@ import Data.Maybe
 import Data.ByteString hiding (takeWhile, count, foldl)
 
 import Prelude hiding (takeWhile)
+
+import Linux.Parser.Internal.Common
 
 -------------------------------------------------------------------------------
 -- | Data type for __\/proc\/[pid]\/maps__.
@@ -175,7 +176,7 @@ miSuperOptions  = _superoptions
 meminfop :: Parser [(ByteString, ByteString, Maybe ByteString)]
 meminfop = manyTill ((,,)
     <$> idp
-    <*> ( skipspacep *> intp <* skipspacep )
+    <*> ( skipJustSpacep *> intp <* skipJustSpacep )
     <*> unitp <* skipMany space) endOfInput
 
 
@@ -217,7 +218,7 @@ statmp = Statm
     <*> parseVal
     where
         parseVal :: Parser ByteString
-        parseVal = ( takeWhile isDigit ) <* skipspacep
+        parseVal = ( takeWhile isDigit ) <* skipJustSpacep
 
 
 
@@ -282,7 +283,7 @@ commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 --
 -- @
 iop :: Parser [(ByteString, ByteString)]
-iop = manyTill ((,) <$> idp <*> ( skipspacep *> intp <* skipMany space )  ) endOfInput
+iop = manyTill ((,) <$> idp <*> ( skipJustSpacep *> intp <* skipMany space )  ) endOfInput
 
 
 
@@ -304,11 +305,11 @@ mapsp = manyTill ( mapsrowp <* endOfLine ) endOfInput
 -- | Parse a row of \/proc\/[pid]\/maps
 mapsrowp :: Parser MappedMemory
 mapsrowp = MM
-    <$> addressp <* skipspacep
-    <*> permp <* skipspacep
-    <*> hdp <* skipspacep
-    <*> devicep <* skipspacep
-    <*> intp <* skipspacep
+    <$> addressp <* skipJustSpacep
+    <*> permp <* skipJustSpacep
+    <*> hdp <* skipJustSpacep
+    <*> devicep <* skipJustSpacep
+    <*> intp <* skipJustSpacep
     <*> pathnamep
     where
         addressp :: Parser (ByteString, ByteString)
@@ -363,8 +364,8 @@ environrowp = (,) <$>
 -- @
 numamapsp :: Parser [(ByteString, ByteString, [ByteString])]
 numamapsp = manyTill ( (,,)
-    <$> ( hdp <* skipspacep )
-    <*> ( takeWhile ( inClass "a-zA-Z" ) <* skipspacep )
+    <$> ( hdp <* skipJustSpacep )
+    <*> ( takeWhile ( inClass "a-zA-Z" ) <* skipJustSpacep )
     <*> ( sepBy ( takeWhile $ inClass "-a-zA-Z0-9=/." ) $ char ' ' )
     <*  endOfLine ) endOfInput
 
@@ -390,10 +391,10 @@ limitsp = parseHeaders *> sepBy limitrowp endOfLine
 
 limitrowp :: Parser Limit
 limitrowp = Limit
-    <$> limitnamep  <* skipspacep
-    <*> shlimitp    <* skipspacep
-    <*> shlimitp    <* skipspacep
-    <*> lunitp      <* skipspacep
+    <$> limitnamep  <* skipJustSpacep
+    <*> shlimitp    <* skipJustSpacep
+    <*> shlimitp    <* skipJustSpacep
+    <*> lunitp      <* skipJustSpacep
 
 
 limitnamep :: Parser [ByteString]
@@ -428,15 +429,15 @@ mountInfop = sepBy mountInfoForRowp endOfLine
 
 mountInfoForRowp :: Parser MountInfo
 mountInfoForRowp = MountInfo
-    <$> takeWhile isDigit <* skipspacep
-    <*> takeWhile isDigit <* skipspacep
-    <*> devMajMinNum <* skipspacep
-    <*> filePathp <* skipspacep
-    <*> filePathp <* skipspacep
-    <*> mountOptionsp <* skipspacep
-    <*> parseOptionalIfExists <* skipspacep
-    <*> fsTypep <* skipspacep
-    <*> mntSrcp <* skipspacep
+    <$> takeWhile isDigit <* skipJustSpacep
+    <*> takeWhile isDigit <* skipJustSpacep
+    <*> devMajMinNum <* skipJustSpacep
+    <*> filePathp <* skipJustSpacep
+    <*> filePathp <* skipJustSpacep
+    <*> mountOptionsp <* skipJustSpacep
+    <*> parseOptionalIfExists <* skipJustSpacep
+    <*> fsTypep <* skipJustSpacep
+    <*> mntSrcp <* skipJustSpacep
     <*> superOptionsp
 
 
@@ -451,7 +452,7 @@ parseDigits = takeWhile isDigit
 parseOptionalIfExists :: Parser ( Maybe [(ByteString, ByteString)] )
 parseOptionalIfExists = peekChar >>= (\c -> case c of
               Just '-' -> return Nothing
-              _        -> liftA Just $  manyTill ( optionalFieldp <* skipspacep )
+              _        -> liftA Just $  manyTill ( optionalFieldp <* skipJustSpacep )
                             $ char '-' )
 
 
@@ -479,10 +480,6 @@ superOptionsp = sepBy ( takeTill $ inClass ",\n " ) $ char ','
 
 -----------------------------------------------------------------------------
 -- * Helper functions
-
--- | Skip only zero or many " "
-skipspacep :: Parser ()
-skipspacep =  (skipMany $ char ' ')
 
 
 -- | Parse the characters a-z A-Z 0-9 ( ) _ until a ":" is reached
