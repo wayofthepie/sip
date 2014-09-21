@@ -6,8 +6,9 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc {-(
+module Linux.Parser.Internal.Proc (
         -- * Data Types
+        -- ** MappedMemory : \/proc\/[pid]\/maps
         MappedMemory (),
         mmAddress,
         mmPerms,
@@ -16,12 +17,14 @@ module Linux.Parser.Internal.Proc {-(
         mmInode,
         mmPathname,
 
+        -- ** Limits : \/proc\/[pid]\/limits
         Limit (),
         limitName,
         softLimit,
         hardLimit,
         unitOfLimit,
 
+        -- ** Statm : \/proc\/[pid]\/statm
         Statm (),
         statmSize,
         statmResident,
@@ -30,6 +33,20 @@ module Linux.Parser.Internal.Proc {-(
         statmLib,
         statmData,
         statmDt,
+
+        -- ** MountInfo : \/proc\/[pid]\/mountinfo
+        MountInfo (),
+        miMountId,
+        miParentId,
+        miDevMajMinNum,
+        miRoot,
+        miMountPoint,
+        miMountOptions,
+        miOptionalFields,
+        miFsType,
+        miMountSource,
+        miSuperOptions,
+
 
         -- * Parsers
         meminfop,
@@ -43,7 +60,7 @@ module Linux.Parser.Internal.Proc {-(
         statmp,
         numamapsp,
         limitsp
-    )-} where
+    ) where
 
 import Control.Applicative hiding (empty)
 import Control.Monad.Cont
@@ -56,7 +73,7 @@ import Data.ByteString hiding (takeWhile, count, foldl)
 import Prelude hiding (takeWhile)
 
 -------------------------------------------------------------------------------
--- | Data type for \/proc\/[pid]\/maps
+-- | Data type for __\/proc\/[pid]\/maps__.
 data MappedMemory = MM {
 
         _address :: (ByteString, ByteString),
@@ -73,14 +90,6 @@ data MappedMemory = MM {
     } deriving (Eq, Show)
 
 
-
-mmAddress   :: MappedMemory -> (ByteString, ByteString)
-mmPerms     :: MappedMemory -> ByteString
-mmOffset    :: MappedMemory -> ByteString
-mmDev       :: MappedMemory -> (ByteString, ByteString)
-mmInode     :: MappedMemory -> ByteString
-mmPathname  :: MappedMemory -> Maybe ByteString
-
 mmAddress    = _address
 mmPerms     = _perms
 mmOffset    = _offset
@@ -89,7 +98,7 @@ mmInode     = _inode
 mmPathname  = _pathname
 
 
--- | Data type for __\/proc\/[pid]\/limits
+-- | Data type for __\/proc\/[pid]\/limits__.
 data Limit = Limit {
         _limit  :: [ByteString],
         _slimit :: ByteString,
@@ -98,18 +107,13 @@ data Limit = Limit {
     } deriving (Eq, Show)
 
 
-limitName   :: Limit -> [ByteString]
-softLimit   :: Limit -> ByteString
-hardLimit   :: Limit -> ByteString
-unitOfLimit :: Limit -> Maybe ByteString
-
 limitName   = _limit
 softLimit   = _slimit
 hardLimit   = _hlimit
 unitOfLimit = _unit
 
 
--- | Data type for __\/proc\/[pid]\/statm.
+-- | Data type for __\/proc\/[pid]\/statm__.
 data Statm = Statm {
         _size       :: ByteString,
         _resident   :: ByteString,
@@ -155,6 +159,7 @@ miOptionalFields= _optionalfields
 miFsType        = _fstype
 miMountSource   = _mountsource
 miSuperOptions  = _superoptions
+
 
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/meminfo__.
