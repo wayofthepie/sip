@@ -59,7 +59,8 @@ module Linux.Parser.Internal.Proc (
         procstatp,
         statmp,
         numamapsp,
-        limitsp
+        limitsp,
+        mountInfop
     ) where
 
 import Control.Applicative hiding (empty)
@@ -413,6 +414,14 @@ lunitp = peekChar >>= \c -> case c of
 
 -----------------------------------------------------------------------------
 -- Parser for __\/proc\/[pid]\/mountinfo__.
+--
+-- @
+--  (openFile "/proc/1/mountinfo" ReadMode) >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream mountInfop is
+--  
+--  [MountInfo {_mountid = "14", _parentid = "18", ...]
+-- @
 mountInfop :: Parser [MountInfo]
 mountInfop = sepBy mountInfoForRowp endOfLine
 
