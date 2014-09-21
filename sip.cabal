@@ -32,6 +32,7 @@ library
                         containers,
                         fgl,
                         text,
-                        transformers
+                        transformers,
+                        mtl
   hs-source-dirs:       src
   default-language:     Haskell2010
