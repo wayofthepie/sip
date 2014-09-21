@@ -178,6 +178,14 @@ psval = ( takeWhile ( inClass "a-zA-z0-9()-" ) <* space )
 
 ------------------------------------------------------------------------------
 -- Parser for __\/proc\/[pid]\/statm__.
+--
+-- @
+--  openFile "/proc/1/statm" ReadMode >>= 
+--      \h -> handleToInputStream h >>= 
+--          \is -> parseFromStream  (statmp) is
+--
+--  Statm {_size = "6490", _resident = "1143", ...]
+-- @
 statmp :: Parser Statm
 statmp = Statm
     <$> parseVal <*> parseVal
