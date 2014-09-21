@@ -6,7 +6,7 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc (
+module Linux.Parser.Internal.Proc {-(
         -- * Data Types
         MappedMemory (),
         mmAddress,
@@ -25,8 +25,9 @@ module Linux.Parser.Internal.Proc (
         mapsp,
         environp,
         procstatp,
-        numamapsp
-    ) where
+        numamapsp,
+        limitsp
+    )-} where
 
 import Control.Applicative hiding (empty)
 import Control.Monad.Cont
@@ -71,6 +72,14 @@ mmDev       = _dev
 mmInode     = _inode
 mmPathname  = _pathname
 
+
+-- | Data type for __\/proc\/[pid]\/limits
+data Limits = Limits {
+        _limit  :: [ByteString],
+        _slimit :: ByteString,
+        _hlimit :: ByteString,
+        _unit   :: Maybe ByteString
+    } deriving (Eq, Show)
 
 
 -------------------------------------------------------------------------------
@@ -240,7 +249,7 @@ environrowp = (,) <$>
 
 
 -----------------------------------------------------------------------------
--- | Parser for \/proc\/[pid]\/numa_maps. Generates a ist of 3-tuples :
+-- | Parser for \/proc\/[pid]\/numa_maps. Generates a list of 3-tuples :
 -- (start addr of mem range, mem policy for range, extra info on pages in
 -- range).
 --
@@ -257,6 +266,50 @@ numamapsp = manyTill ( (,,)
     <*> ( takeWhile ( inClass "a-zA-Z" ) <* skipspacep )
     <*> ( sepBy ( takeWhile $ inClass "-a-zA-Z0-9=/." ) $ char ' ' )
     <*  endOfLine ) endOfInput
+
+
+
+-----------------------------------------------------------------------------
+-- | Parser for \/proc\/[pid]\/limits.
+--
+-- @
+--  openFile "/proc/1/limits" ReadMode >>=
+--      \h -> handleToInputStream h >>=
+--          \is -> parseFromStream limitsp is
+--
+--  [Limits {_limit = ["Max","cpu","time"], _slimit = "unlimited"
+-- @
+limitsp :: Parser [Limits]
+limitsp = parseHeaders *> sepBy limitrowp endOfLine
+    where
+        parseHeaders :: Parser ByteString
+        parseHeaders =
+            takeTill (\c -> if c == '\n' then True else False) <* endOfLine
+
+
+
+limitrowp :: Parser Limits
+limitrowp = Limits
+    <$> limitnamep  <* skipspacep
+    <*> shlimitp    <* skipspacep
+    <*> shlimitp    <* skipspacep
+    <*> lunitp      <* skipspacep
+
+
+limitnamep :: Parser [ByteString]
+limitnamep = manyTill ( takeWhile ( inClass "a-zA-Z" ) <* char ' ' ) $ char ' '
+
+
+shlimitp :: Parser ByteString
+shlimitp = takeWhile $ inClass "a-zA-Z0-9"
+
+
+lunitp :: Parser (Maybe ByteString)
+lunitp = peekChar >>= \c -> case c of
+                  Just '\n'   -> return Nothing
+                  _           -> liftA Just $
+                                  takeWhile ( inClass "a-zA-Z" )
+
 
 
 
