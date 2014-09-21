@@ -487,11 +487,6 @@ idp :: Parser ByteString
 idp = takeWhile ( inClass "a-zA-z0-9()_" ) <* (skipMany $ char ' ') <*  char ':'
 
 
--- | Parse and integer
-intp :: Parser ByteString
-intp = takeWhile $ inClass "0-9"
-
-
 -- | Parse kB
 unitp :: Parser (Maybe ByteString)
 unitp = option Nothing (string "kB" >>= \p -> return $ Just p)

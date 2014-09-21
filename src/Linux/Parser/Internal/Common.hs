@@ -22,3 +22,8 @@ skipJustSpacep :: Parser ()
 skipJustSpacep = skipMany $ char ' '
 
 
+-- | Parse and integer
+intp :: Parser ByteString
+intp = takeWhile $ inClass "0-9"
+
+
