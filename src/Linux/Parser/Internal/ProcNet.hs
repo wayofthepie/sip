@@ -20,8 +20,7 @@ import Prelude hiding (takeWhile)
 import Linux.Parser.Internal.Common
 
 -------------------------------------------------------------------------------
-
--- * __\/proc\/net\/dev
+-- * __\/proc\/net\/dev__
 
 data NetDeviceInfo = NetDeviceInfo {
         _deviceName     :: ByteString,
