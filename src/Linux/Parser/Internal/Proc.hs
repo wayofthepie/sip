@@ -6,7 +6,7 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc (
+module Linux.Parser.Internal.Proc {-(
         -- * Data Types
         MappedMemory (),
         mmAddress,
@@ -43,7 +43,7 @@ module Linux.Parser.Internal.Proc (
         statmp,
         numamapsp,
         limitsp
-    ) where
+    )-} where
 
 import Control.Applicative hiding (empty)
 import Control.Monad.Cont
@@ -121,14 +121,6 @@ data Statm = Statm {
     } deriving (Eq, Show)
 
 
-statmSize       :: Statm -> ByteString
-statmResident   :: Statm -> ByteString
-statmShare      :: Statm -> ByteString
-statmText       :: Statm -> ByteString
-statmLib        :: Statm -> ByteString
-statmData       :: Statm -> ByteString
-statmDt         :: Statm -> ByteString
-
 statmSize       = _size
 statmResident   = _resident
 statmShare      = _share
@@ -138,6 +130,31 @@ statmData       = _data
 statmDt         = _dt
 
 
+-- Data type for __\/proc\/[pid]\/mountinfo__.
+data MountInfo = MountInfo {
+        _mountid        :: ByteString,
+        _parentid       :: ByteString,
+        _devmajmin      :: (ByteString, ByteString),
+        _root           :: ByteString,
+        _mountpoint     :: ByteString,
+        _mountopts      :: [ByteString],
+        _optionalfields :: Maybe [(ByteString, ByteString)],
+        _fstype         :: ByteString,
+        _mountsource    :: ByteString,
+        _superoptions   :: [ByteString]
+    } deriving (Eq, Show)
+
+
+miMountId       = _mountid
+miParentId      = _parentid
+miDevMajMinNum  = _devmajmin
+miRoot          = _root
+miMountPoint    = _mountpoint
+miMountOptions  = _mountopts
+miOptionalFields= _optionalfields
+miFsType        = _fstype
+miMountSource   = _mountsource
+miSuperOptions  = _superoptions
 
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/meminfo__.
@@ -180,8 +197,8 @@ psval = ( takeWhile ( inClass "a-zA-z0-9()-" ) <* space )
 -- | Parser for __\/proc\/[pid]\/statm__.
 --
 -- @
---  openFile "/proc/1/statm" ReadMode >>= 
---      \h -> handleToInputStream h >>= 
+--  openFile "/proc/1/statm" ReadMode >>=
+--      \h -> handleToInputStream h >>=
 --          \is -> parseFromStream  (statmp) is
 --
 --  Statm {_size = "6490", _resident = "1143", ...]
@@ -326,7 +343,6 @@ environrowp = (,) <$>
 
 
 
-
 -----------------------------------------------------------------------------
 -- | Parser for \/proc\/[pid]\/numa_maps. Generates a list of 3-tuples :
 -- (start addr of mem range, mem policy for range, extra info on pages in
@@ -366,7 +382,6 @@ limitsp = parseHeaders *> sepBy limitrowp endOfLine
             takeTill (\c -> if c == '\n' then True else False) <* endOfLine
 
 
-
 limitrowp :: Parser Limit
 limitrowp = Limit
     <$> limitnamep  <* skipspacep
@@ -389,6 +404,62 @@ lunitp = peekChar >>= \c -> case c of
                   _           -> liftA Just $
                                   takeWhile ( inClass "a-zA-Z" )
 
+
+
+-----------------------------------------------------------------------------
+-- Parser for __\/proc\/[pid]\/mountinfo__.
+mountInfop :: Parser [MountInfo]
+mountInfop = sepBy mountInfoForRowp endOfLine
+
+
+mountInfoForRowp :: Parser MountInfo
+mountInfoForRowp = MountInfo
+    <$> takeWhile isDigit <* skipspacep
+    <*> takeWhile isDigit <* skipspacep
+    <*> devMajMinNum <* skipspacep
+    <*> filePathp <* skipspacep
+    <*> filePathp <* skipspacep
+    <*> mountOptionsp <* skipspacep
+    <*> parseOptionalIfExists <* skipspacep
+    <*> fsTypep <* skipspacep
+    <*> mntSrcp <* skipspacep
+    <*> superOptionsp
+
+
+devMajMinNum :: Parser (ByteString, ByteString)
+devMajMinNum = (,) <$> (parseDigits <* char ':') <*> parseDigits
+
+
+parseDigits :: Parser ByteString
+parseDigits = takeWhile isDigit
+
+
+parseOptionalIfExists :: Parser ( Maybe [(ByteString, ByteString)] )
+parseOptionalIfExists = peekChar >>= (\c -> case c of
+              Just '-' -> return Nothing
+              _        -> liftA Just $  manyTill ( optionalFieldp <* skipspacep )
+                            $ char '-' )
+
+
+optionalFieldp :: Parser (ByteString, ByteString)
+optionalFieldp = let tagVal = takeWhile ( notInClass ": " ) in
+            (,) <$> ( tagVal  <* char ':' ) <*> tagVal
+
+
+mountOptionsp :: Parser [ByteString]
+mountOptionsp = sepBy ( takeWhile $ notInClass ", " ) $ char ','
+
+
+fsTypep :: Parser ByteString
+fsTypep = takeWhile $ notInClass " "
+
+
+mntSrcp :: Parser ByteString
+mntSrcp = fsTypep
+
+
+superOptionsp :: Parser [ByteString]
+superOptionsp = sepBy ( takeTill $ inClass ",\n " ) $ char ','
 
 
 
@@ -424,3 +495,6 @@ hdp :: Parser ByteString
 hdp = takeWhile $ inClass "0-9a-f"
 
 
+-- | Common parser for file paths
+filePathp :: Parser ByteString
+filePathp = takeWhile $ inClass "-a-zA-Z0-9.()[]_/,"
