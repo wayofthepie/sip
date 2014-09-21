@@ -15,23 +15,26 @@ module Linux.Parser.Internal.Proc (
         mmDev,
         mmInode,
         mmPathname,
+
         -- * Parsers
         meminfop,
-        procstatp,
         loadavgp,
         uptimep,
         commp,
         iop,
         mapsp,
-        environp
+        environp,
+        procstatp
+
     ) where
 
 import Control.Applicative hiding (empty)
+import Control.Monad.Cont
 import qualified Data.ByteString.Char8 as BC
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.Maybe
-import Data.ByteString hiding (takeWhile, count)
+import Data.ByteString hiding (takeWhile, count, foldl)
 
 import Prelude hiding (takeWhile)
 
@@ -55,8 +58,8 @@ data MappedMemory = MM {
 
 
 mmAddress   :: MappedMemory -> (ByteString, ByteString)
-mmPerms     :: MappedMemory ->ByteString
-mmOffset    :: MappedMemory ->ByteString
+mmPerms     :: MappedMemory -> ByteString
+mmOffset    :: MappedMemory -> ByteString
 mmDev       :: MappedMemory -> (ByteString, ByteString)
 mmInode     :: MappedMemory -> ByteString
 mmPathname  :: MappedMemory -> Maybe ByteString
@@ -99,8 +102,12 @@ meminfop = manyTill ((,,)
 --  ["1","(systemd)",\"S\","0","1", ...]
 -- @
 procstatp :: Parser [ByteString]
-procstatp = manyTill (takeWhile ( inClass "a-zA-z0-9()-" ) <* space) endOfInput
+procstatp = manyTill psval endOfInput 
 
+
+psval ::  Parser ByteString
+psval = ( takeWhile ( inClass "a-zA-z0-9()-" ) <* space )
+          
 
 
 ------------------------------------------------------------------------------
