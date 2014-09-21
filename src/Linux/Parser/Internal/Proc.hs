@@ -15,6 +15,12 @@ module Linux.Parser.Internal.Proc (
         mmDev,
         mmInode,
         mmPathname,
+        
+        Limit (),
+        limitName,
+        softLimit,
+        hardLimit,
+        unitOfLimit,
 
         -- * Parsers
         meminfop,
@@ -74,13 +80,23 @@ mmPathname  = _pathname
 
 
 -- | Data type for __\/proc\/[pid]\/limits
-data Limits = Limits {
+data Limit = Limit {
         _limit  :: [ByteString],
         _slimit :: ByteString,
         _hlimit :: ByteString,
         _unit   :: Maybe ByteString
     } deriving (Eq, Show)
 
+
+limitName   :: Limit -> [ByteString]
+softLimit   :: Limit -> ByteString
+hardLimit   :: Limit -> ByteString
+unitOfLimit :: Limit -> Maybe ByteString
+
+limitName   = _limit
+softLimit   = _slimit
+hardLimit   = _hlimit
+unitOfLimit = _unit
 
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/meminfo__.
@@ -279,7 +295,7 @@ numamapsp = manyTill ( (,,)
 --
 --  [Limits {_limit = ["Max","cpu","time"], _slimit = "unlimited"
 -- @
-limitsp :: Parser [Limits]
+limitsp :: Parser [Limit]
 limitsp = parseHeaders *> sepBy limitrowp endOfLine
     where
         parseHeaders :: Parser ByteString
@@ -288,8 +304,8 @@ limitsp = parseHeaders *> sepBy limitrowp endOfLine
 
 
 
-limitrowp :: Parser Limits
-limitrowp = Limits
+limitrowp :: Parser Limit
+limitrowp = Limit
     <$> limitnamep  <* skipspacep
     <*> shlimitp    <* skipspacep
     <*> shlimitp    <* skipspacep
