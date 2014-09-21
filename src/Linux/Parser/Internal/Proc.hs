@@ -6,7 +6,7 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc {-(
+module Linux.Parser.Internal.Proc (
         -- * Data Types
         MappedMemory (),
         mmAddress,
@@ -27,7 +27,7 @@ module Linux.Parser.Internal.Proc {-(
         procstatp,
         numamapsp,
         limitsp
-    )-} where
+    ) where
 
 import Control.Applicative hiding (empty)
 import Control.Monad.Cont
