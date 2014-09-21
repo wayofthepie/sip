@@ -15,12 +15,21 @@ module Linux.Parser.Internal.Proc (
         mmDev,
         mmInode,
         mmPathname,
-        
+
         Limit (),
         limitName,
         softLimit,
         hardLimit,
         unitOfLimit,
+
+        Statm (),
+        statmSize,
+        statmResident,
+        statmShare,
+        statmText,
+        statmLib,
+        statmData,
+        statmDt,
 
         -- * Parsers
         meminfop,
@@ -31,6 +40,7 @@ module Linux.Parser.Internal.Proc (
         mapsp,
         environp,
         procstatp,
+        statmp,
         numamapsp,
         limitsp
     ) where
@@ -98,6 +108,37 @@ softLimit   = _slimit
 hardLimit   = _hlimit
 unitOfLimit = _unit
 
+
+-- | Data type for __\/proc\/[pid]\/statm.
+data Statm = Statm {
+        _size       :: ByteString,
+        _resident   :: ByteString,
+        _share      :: ByteString,
+        _text       :: ByteString,
+        _lib        :: ByteString,
+        _data       :: ByteString,
+        _dt         :: ByteString
+    } deriving (Eq, Show)
+
+
+statmSize       :: Statm -> ByteString
+statmResident   :: Statm -> ByteString
+statmShare      :: Statm -> ByteString
+statmText       :: Statm -> ByteString
+statmLib        :: Statm -> ByteString
+statmData       :: Statm -> ByteString
+statmDt         :: Statm -> ByteString
+
+statmSize       = _size
+statmResident   = _resident
+statmShare      = _share
+statmText       = _text
+statmLib        = _lib
+statmData       = _data
+statmDt         = _dt
+
+
+
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/meminfo__.
 --
@@ -132,6 +173,20 @@ procstatp = manyTill psval endOfInput
 
 psval ::  Parser ByteString
 psval = ( takeWhile ( inClass "a-zA-z0-9()-" ) <* space )
+
+
+
+------------------------------------------------------------------------------
+-- Parser for __\/proc\/[pid]\/statm__.
+statmp :: Parser Statm
+statmp = Statm
+    <$> parseVal <*> parseVal
+    <*> parseVal <*> parseVal
+    <*> parseVal <*> parseVal
+    <*> parseVal
+    where
+        parseVal :: Parser ByteString
+        parseVal = ( takeWhile isDigit ) <* skipspacep
 
 
 
