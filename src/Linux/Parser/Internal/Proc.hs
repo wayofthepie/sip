@@ -177,7 +177,7 @@ psval = ( takeWhile ( inClass "a-zA-z0-9()-" ) <* space )
 
 
 ------------------------------------------------------------------------------
--- Parser for __\/proc\/[pid]\/statm__.
+-- | Parser for __\/proc\/[pid]\/statm__.
 --
 -- @
 --  openFile "/proc/1/statm" ReadMode >>= 
