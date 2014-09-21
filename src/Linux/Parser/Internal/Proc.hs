@@ -413,7 +413,7 @@ lunitp = peekChar >>= \c -> case c of
 
 
 -----------------------------------------------------------------------------
--- Parser for __\/proc\/[pid]\/mountinfo__.
+-- | Parser for __\/proc\/[pid]\/mountinfo__.
 --
 -- @
 --  (openFile "/proc/1/mountinfo" ReadMode) >>= 
