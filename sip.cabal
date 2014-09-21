@@ -19,7 +19,8 @@ library
   exposed-modules:      Linux.Graph.SystemInfo,
                         Linux.Parser.Lsof,
                         Linux.Parser.Internal.Lsof,
-                        Linux.Parser.Internal.Proc
+                        Linux.Parser.Internal.Proc,
+                        Linux.Parser.Internal.ProcNet
 
   -- other-modules:       
   -- other-extensions:    
