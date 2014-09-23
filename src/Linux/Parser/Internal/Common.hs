@@ -10,9 +10,7 @@ module Linux.Parser.Internal.Common where
 
 import Control.Applicative hiding (empty)
 import qualified Data.ByteString.Char8 as BC
-import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
-import Data.Maybe
 import Data.ByteString hiding (takeWhile, count, foldl)
 
 import Prelude hiding (takeWhile)
@@ -26,4 +24,7 @@ skipJustSpacep = skipMany $ char ' '
 intp :: Parser ByteString
 intp = takeWhile $ inClass "0-9"
 
-
+-- | Parse a line, throw away the result
+skipLinep :: Parser ()
+skipLinep = skipWhile ( not . isEndOfLine ) >> endOfLine 
+    where isEndOfLine c = if c == '\n' then True else False

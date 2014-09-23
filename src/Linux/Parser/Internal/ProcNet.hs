@@ -10,7 +10,6 @@ module Linux.Parser.Internal.ProcNet where
 
 import Control.Applicative hiding (empty)
 import Data.ByteString.Char8 
---import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.Maybe
 import Data.ByteString hiding (takeWhile, count, foldl)
@@ -44,33 +43,22 @@ data NetDeviceInfo = NetDeviceInfo {
 
 -- | Parser for __\/proc\/net\/dev__.
 netDevp :: Parser [NetDeviceInfo]
-netDevp = skipLine *> skipLine *> manyTill ( netDevRowp <* endOfLine ) endOfInput
+netDevp = skipLinep *> skipLinep *> manyTill ( netDevRowp ) endOfInput
 
 
 netDevRowp :: Parser NetDeviceInfo
-netDevRowp = NetDeviceInfo 
+netDevRowp = builder 
     <$> ( skipJustSpacep *> deviceNamep ) <* skipJustSpacep
-    <*> intp <* skipJustSpacep 
-    <*> intp <* skipJustSpacep     
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp <* skipJustSpacep
-    <*> intp 
+    <*> manyTill (intp <* skipJustSpacep) endOfLine
+    where
+        -- Not sure of any other way to do this ...
+        builder :: ByteString -> [ByteString] -> NetDeviceInfo 
+        builder a (b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:[]) =
+            NetDeviceInfo a b c d e f g h i j k l m n o p q 
+            
 
 deviceNamep :: Parser ByteString
 deviceNamep = takeTill ( inClass ":" ) <* char ':'
 
 
-skipLine :: Parser ()
-skipLine = skipWhile ( not . isEndOfLine ) >> endOfLine 
-    where isEndOfLine c = if c == '\n' then True else False
+
