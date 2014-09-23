@@ -6,62 +6,7 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc (
-        -- * Data Types
-        -- ** MappedMemory : \/proc\/[pid]\/maps
-        MappedMemory (),
-        mmAddress,
-        mmPerms,
-        mmOffset,
-        mmDev,
-        mmInode,
-        mmPathname,
-
-        -- ** Limits : \/proc\/[pid]\/limits
-        Limit (),
-        limitName,
-        softLimit,
-        hardLimit,
-        unitOfLimit,
-
-        -- ** Statm : \/proc\/[pid]\/statm
-        Statm (),
-        statmSize,
-        statmResident,
-        statmShare,
-        statmText,
-        statmLib,
-        statmData,
-        statmDt,
-
-        -- ** MountInfo : \/proc\/[pid]\/mountinfo
-        MountInfo (),
-        miMountId,
-        miParentId,
-        miDevMajMinNum,
-        miRoot,
-        miMountPoint,
-        miMountOptions,
-        miOptionalFields,
-        miFsType,
-        miMountSource,
-        miSuperOptions,
-
-
-        -- * Parsers
-        meminfop,
-        loadavgp,
-        uptimep,
-        commp,
-        iop,
-        mapsp,
-        environp,
-        procstatp,
-        statmp,
-        numamapsp,
-        limitsp,
-        mountInfop
-    ) where
+module Linux.Parser.Internal.Proc where
 
 import Control.Applicative hiding (empty)
 import qualified Data.ByteString.Char8 as BC
@@ -74,7 +19,12 @@ import Prelude hiding (takeWhile)
 
 import Linux.Parser.Internal.Common
 
+
 -------------------------------------------------------------------------------
+-- * Data Types
+
+-- ** MappedMemory : \/proc\/[pid]\/maps
+
 -- | Data type for __\/proc\/[pid]\/maps__.
 data MappedMemory = MM {
 
@@ -100,6 +50,9 @@ mmInode     = _inode
 mmPathname  = _pathname
 
 
+
+-- ** Limits : \/proc\/[pid]\/limits
+
 -- | Data type for __\/proc\/[pid]\/limits__.
 data Limit = Limit {
         _limit  :: [ByteString],
@@ -114,6 +67,9 @@ softLimit   = _slimit
 hardLimit   = _hlimit
 unitOfLimit = _unit
 
+
+
+-- ** Statm : \/proc\/[pid]\/statm
 
 -- | Data type for __\/proc\/[pid]\/statm__.
 data Statm = Statm {
@@ -135,6 +91,9 @@ statmLib        = _lib
 statmData       = _data
 statmDt         = _dt
 
+
+
+-- ** MountInfo : \/proc\/[pid]\/mountinfo
 
 -- Data type for __\/proc\/[pid]\/mountinfo__.
 data MountInfo = MountInfo {
@@ -164,6 +123,8 @@ miSuperOptions  = _superoptions
 
 
 -------------------------------------------------------------------------------
+-- * Parsers
+
 -- | Parser for __\/proc\/meminfo__.
 --
 -- @
@@ -196,7 +157,7 @@ procstatp = manyTill psval endOfInput
 
 
 psval ::  Parser ByteString
-psval = ( takeWhile ( inClass "a-zA-z0-9()-" ) <* space )
+psval = ( takeWhile ( inClass "a-zA-Z0-9()-" ) <* skipJustSpacep )
 
 
 
