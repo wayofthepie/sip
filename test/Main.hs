@@ -11,29 +11,33 @@ import Test.QuickCheck
 import Linux.Parser.Internal.Proc
 
 
-main = defaultMain tests 
+main = defaultMain tests
 
-newtype AllowedByteString = AllowedByteString { 
-        unwrapByteString :: ByteString 
+newtype AllowedPsval = AllowedPsval {
+        unwrapByteString :: ByteString
     } deriving (Show)
 
-instance Arbitrary ByteString where
-    arbitrary = pack <$> ( listOf1 $ elements $     
-                    ['a'..'z'] ++ ['A'..'Z'] ++ ['(', ')', '-'])
-
--- | Property tests for procStatp 
-propCharsAllowed :: ByteString -> Bool
-propCharsAllowed x = run psval x == Just x
+instance Arbitrary AllowedPsval where
+    arbitrary = AllowedPsval <$> 
+        ( pack <$> ( listOf1 $ elements $
+            ['a'..'z'] ++ ['A'..'Z'] ++ ['(', ')', '-']) )
 
 
+
+-- | Property tests for psval
+propAllowedPsval :: AllowedPsval -> Bool
+propAllowedPsval (AllowedPsval x) = run psval x == Just x
+
+
+-- | Helper functions
 run :: Show a => Parser a -> ByteString -> Maybe a
-run p input = 
+run p input =
     case parseOnly p input of
-        Left err    -> error err 
+        Left err    -> error err
         Right x     -> Just x
 
 tests :: [Test]
 tests = [
-    testProperty "psval" propCharsAllowed
+    testProperty "psval" propAllowedPsval
     ]
 
