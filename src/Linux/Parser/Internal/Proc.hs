@@ -168,8 +168,8 @@ miSuperOptions  = _superoptions
 --
 -- @
 --  openFile "\/proc\/meminfo" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream  meminfop is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream  meminfop is
 --
 -- [("MemTotal","4052076",Just "kB"),("MemFree","3450628",Just "kB"), ...]
 -- @
@@ -186,8 +186,8 @@ meminfop = manyTill ((,,)
 --
 -- @
 --  openFile "\/proc\/1\/stat" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream procstatp is
+--     \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream procstatp is
 --
 --  ["1","(systemd)",\"S\","0","1", ...]
 -- @
@@ -205,8 +205,8 @@ psval = ( takeWhile ( inClass "a-zA-z0-9()-" ) <* space )
 --
 -- @
 --  openFile "/proc/1/statm" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream  (statmp) is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream  (statmp) is
 --
 --  Statm {_size = "6490", _resident = "1143", ...]
 -- @
@@ -229,8 +229,8 @@ statmp = Statm
 --
 -- @
 --  openFile "\/proc\/loadavg" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream loadavgp is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream loadavgp is
 --
 --  ("0.00","0.01","0.05")
 -- @
@@ -246,8 +246,8 @@ loadavgp = (,,) <$> doublep <*> doublep <*> doublep
 --
 -- @
 --  openFile "\/proc\/uptime" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream uptimep is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream uptimep is
 --
 --  ("13048.12","78085.17")
 -- @
@@ -261,8 +261,8 @@ uptimep = (,) <$> doublep <*> doublep
 --
 -- @
 --  openFile "\/proc\/1\/comm" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream (commp) is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream (commp) is
 --
 --  "systemd"
 -- @
@@ -276,8 +276,8 @@ commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 --
 -- @
 --  openFile "\/proc\/1\/io" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream (iop) is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream (iop) is
 --
 --  [("rchar","12983399"),("wchar","14957379"), ...]
 --
@@ -292,8 +292,8 @@ iop = manyTill ((,) <$> idp <*> ( skipJustSpacep *> intp <* skipMany space )  ) 
 --
 -- @
 --  openFile "\/proc\/1\/maps" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream mapsp is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream mapsp is
 --
 --  [MM {_address = ("7f9c51069000","7f9c5107e000"), _perms = "r-xp", ...]
 -- @
@@ -334,8 +334,8 @@ mapsrowp = MM
 --
 -- @
 --  openFile "/proc/373/environ" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream environp is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream environp is
 --
 --  [("LANG","en_IE.UTF-8"),("PATH","/usr/local/sbin"), ...]
 -- @
@@ -357,8 +357,8 @@ environrowp = (,) <$>
 --
 -- @
 --  openFile "/proc/1/numa_maps" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream numamapsp is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream numamapsp is
 --
 -- [("7f9c51069000","default",["file=/usr/lib/libz.so.1.2.8", ...]
 -- @
@@ -376,8 +376,8 @@ numamapsp = manyTill ( (,,)
 --
 -- @
 --  openFile "/proc/1/limits" ReadMode >>=
---      \h -> handleToInputStream h >>=
---          \is -> parseFromStream limitsp is
+--      \\h -> handleToInputStream h >>=
+--          \\is -> parseFromStream limitsp is
 --
 --  [Limits {_limit = ["Max","cpu","time"], _slimit = "unlimited"
 -- @
@@ -418,8 +418,8 @@ lunitp = peekChar >>= \c -> case c of
 --
 -- @
 --  (openFile "/proc/1/mountinfo" ReadMode) >>= 
---      \h -> handleToInputStream h >>= 
---          \is -> parseFromStream mountInfop is
+--      \\h -> handleToInputStream h >>= 
+--          \\is -> parseFromStream mountInfop is
 --  
 --  [MountInfo {_mountid = "14", _parentid = "18", ...]
 -- @
