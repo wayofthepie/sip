@@ -13,7 +13,7 @@ import qualified Data.ByteString.Char8 as BC
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.Maybe
-import Data.ByteString hiding (takeWhile, count, foldl)
+import Data.ByteString hiding (map, count, foldl, foldl1, takeWhile)
 
 import Prelude hiding (takeWhile)
 
@@ -150,14 +150,25 @@ meminfop = manyTill ((,,)
 --      \h -> handleToInputStream h >>=
 --          \is -> parseFromStream procstatp is
 --
---  ["1","(systemd)",\"S\","0","1", ...]
+--  ("1","(systemd)",\"S\",["0","1", ...])
 -- @
-procstatp :: Parser [ByteString]
-procstatp = manyTill psval endOfInput
+procStatp :: Parser (ByteString, ByteString, ByteString, [ByteString])
+procStatp = (,,,)
+    <$> lexeme pidp
+    <*> lexeme cmdNamep
+    <*> lexeme statep
+    <*> manyTill (lexeme intp) endOfInput
 
 
-psval ::  Parser ByteString
-psval = ( takeWhile ( inClass "a-zA-Z0-9()-" ) <* space )
+pidp :: Parser ByteString
+pidp = takeWhile $ isDigit
+
+statep :: Parser ByteString
+statep = liftA singleton $ foldl1 (<|>) $
+    map char8 ['S', 'R', 'D', 'Z', 'T', 't', 'W', 'X', 'x', 'K', 'W', 'P']
+
+cmdNamep :: Parser ByteString
+cmdNamep = takeWhile $ inClass "a-zA-Z0-9()-"
 
 
 
@@ -378,10 +389,10 @@ lunitp = peekChar >>= \c -> case c of
 -- | Parser for __\/proc\/[pid]\/mountinfo__.
 --
 -- @
---  (openFile "/proc/1/mountinfo" ReadMode) >>= 
---      \h -> handleToInputStream h >>= 
+--  (openFile "/proc/1/mountinfo" ReadMode) >>=
+--      \h -> handleToInputStream h >>=
 --          \is -> parseFromStream mountInfop is
---  
+--
 --  [MountInfo {_mountid = "14", _parentid = "18", ...]
 -- @
 mountInfop :: Parser [MountInfo]

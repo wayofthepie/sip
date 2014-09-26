@@ -20,11 +20,19 @@ skipJustSpacep :: Parser ()
 skipJustSpacep = skipMany $ char ' '
 
 
--- | Parse and integer
+-- | Parse an integer
 intp :: Parser ByteString
-intp = takeWhile $ inClass "0-9"
+intp = peekChar >>= \c -> case c of 
+    Just '-'    -> char '-' *> digitp
+    _           -> digitp
+    where digitp = takeWhile $ inClass "0-9"
 
 -- | Parse a line, throw away the result
 skipLinep :: Parser ()
 skipLinep = skipWhile ( not . isEndOfLine ) >> endOfLine 
     where isEndOfLine c = if c == '\n' then True else False
+
+-- | Parse space before and after a parser
+lexeme :: Parser a -> Parser a
+lexeme p = skipJustSpacep *> p <* skipJustSpacep
+
