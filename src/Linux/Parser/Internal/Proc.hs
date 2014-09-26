@@ -157,7 +157,7 @@ procstatp = manyTill psval endOfInput
 
 
 psval ::  Parser ByteString
-psval = ( takeWhile ( inClass "a-zA-Z0-9()-" ) <* skipJustSpacep )
+psval = ( takeWhile ( inClass "a-zA-Z0-9()-" ) <* space )
 
 
 
