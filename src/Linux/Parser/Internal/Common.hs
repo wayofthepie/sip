@@ -1,4 +1,4 @@
-
+{-# LANGUAGE OverloadedStrings #-}
 {-|
     Module          : Linux.Parser.Internal.ProcNet
     Descripition    : Parsers for the \/proc\/net\/ and \/proc\/[pid]\/net\/.
@@ -23,7 +23,8 @@ skipJustSpacep = skipMany $ char ' '
 -- | Parse an integer
 intp :: Parser ByteString
 intp = peekChar >>= \c -> case c of 
-    Just '-'    -> char '-' *> digitp
+    Just '-'    -> char '-' *> digitp >>= 
+                    \cs -> return $ BC.append "-" cs
     _           -> digitp
     where digitp = takeWhile $ inClass "0-9"
 
