@@ -37,6 +37,6 @@ cache:
 # Push reports to S3
 addons:
     artifacts:
-         paths:
-            - $HOME/sip/BenchResult.html
+        paths:
+        - $HOME/sip/BenchResult.html
         s3_region: "Ireland"
