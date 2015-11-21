@@ -7,9 +7,7 @@
 module Linux.Parser.Internal.ProcNet where
 
 import Control.Applicative hiding (empty)
-import Data.ByteString.Char8
 import Data.Attoparsec.ByteString.Char8
-import Data.Maybe
 import Data.ByteString hiding (takeWhile, count, foldl)
 
 import Prelude hiding (takeWhile)

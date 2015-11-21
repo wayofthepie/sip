@@ -4,3 +4,7 @@ dist/
 .stack-work
 
 *.swp
+
+*.html
+
+.hpc/

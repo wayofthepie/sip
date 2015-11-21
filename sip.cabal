@@ -18,6 +18,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:      Linux.Graph.SystemInfo,
                         Linux.Parser.Lsof,
+                        Linux.Parser.Internal.Common,
                         Linux.Parser.Internal.Lsof,
                         Linux.Parser.Internal.Proc,
                         Linux.Parser.Internal.ProcNet
@@ -35,5 +36,30 @@ library
                         mtl
   hs-source-dirs:       src
   default-language:     Haskell2010
-  ghc-options:     -Wall
+  ghc-options:     -Wall -fhpc
 
+test-suite top-level-parser-tests
+  type:               exitcode-stdio-1.0
+  main-is:            Spec.hs
+  other-modules:
+    Proc
+    , ProcNet
+
+  hs-source-dirs:     test
+  build-depends:
+    base >= 4.7 && < 5
+    , attoparsec
+    , bytestring
+    , tasty
+    , tasty-hunit
+    , tasty-smallcheck
+    , tasty-quickcheck
+    , sip
+
+benchmark bench-sip
+    type:       exitcode-stdio-1.0
+    main-is:    Bench.hs
+    hs-source-dirs: src, bench
+    build-depends:
+        base
+        , criterion
