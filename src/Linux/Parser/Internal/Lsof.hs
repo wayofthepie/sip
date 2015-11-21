@@ -3,20 +3,21 @@
     Descripition    : Parsers for lsof output
 
     Example command to run the parser:
-       
-       @ 
+
+       @
        liftM (parse lsofp "") $ readProcess "lsof" ["-n", "-F","cfgpRuni"] ""
        @
 -}
 module Linux.Parser.Internal.Lsof where
 
-import Control.Applicative hiding (many,(<|>))
-import Text.Parsec
-import Text.Parsec.String
+import Control.Applicative
+import Data.Attoparsec.Text
+--import Text.Parsec
+--import Text.Parsec.String
 
 
 procCmdNamep :: Parser String
-procCmdNamep = char 'c' *> many ( alphaNum <|> oneOf "/:_-()." )
+procCmdNamep = char 'c' *> many ( alphaNum <|> satisfy (flip elem "/:_-().") )
 
 
 fdp :: Parser String
@@ -32,7 +33,7 @@ inodep = char 'i' *> numStrToIntp
 
 
 fileNamep :: Parser String
-fileNamep = char 'n' *> many ( alphaNum <|> oneOf "/:_-().[]*:=>@" )
+fileNamep = char 'n' *> many ( alphaNum <|> satisfy (flip elem "/:_-().[]*:=>@") )
 
 
 pidp :: Parser Int
@@ -54,3 +55,5 @@ procUserIdp = char 'u' *> numStrToIntp
 numStrToIntp :: Parser Int
 numStrToIntp = liftA read $ many1 digit
 
+alphaNum :: Parser Char
+alphaNum = letter <|> digit

@@ -2,7 +2,7 @@
 module Linux.Parser.Lsof {-(
         PIDInfo (),
         FileInfo (),
-        
+
         lsofp,
 
         pid,
@@ -18,15 +18,16 @@ module Linux.Parser.Lsof {-(
  where
 
 
-import Control.Applicative hiding (many,(<|>))
+import Control.Applicative hiding ((<|>))
 import Data.Graph.Inductive
-import Text.Parsec
-import Text.Parsec.String
+import Data.Attoparsec.Text
+--import Text.Parsec
+--import Text.Parsec.String
 
 import Linux.Parser.Internal.Lsof
 
 
-type LsofCST = [ ( PIDInfo, [FileInfo] ) ] 
+type LsofCST = [ ( PIDInfo, [FileInfo] ) ]
 
 data PIDInfo = PIDInfo {
         _pid    :: Int,     -- ^ Process ID
@@ -59,7 +60,7 @@ uid = _uid
 
 
 data FileInfo = FileInfo {
-        _fd         :: String,  -- ^ File descriptor 
+        _fd         :: String,  -- ^ File descriptor
         _inode      :: Int,     -- ^ inode number
         _fname      :: String   -- ^ File name corresponding to inode number
     } deriving (Eq, Ord, Show)
@@ -82,21 +83,21 @@ fname = _fname
 --------------------------------------------------------------------------------
 
 lsofp :: Parser LsofCST
-lsofp = manyTill ( (,) <$> pidInfop <*> many fileSetp ) eof
+lsofp = manyTill ( (,) <$> pidInfop <*> many fileSetp ) endOfInput
 
 
 fileSetp :: Parser FileInfo
 fileSetp = FileInfo
-    <$> fdp <* newline 
-    <*> option (-1) ( inodep <* newline ) 
-    <*> fileNamep <* newline
-  
+    <$> fdp <* endOfLine
+    <*> option (-1) ( inodep <* endOfLine )
+    <*> fileNamep <* endOfLine
+
 
 pidInfop :: Parser PIDInfo
 pidInfop = PIDInfo
-        <$> pidp <* newline
-        <*> procGroupIdp <* newline
-        <*> ppidp <* newline
-        <*> procCmdNamep <* newline
-        <*> procUserIdp <* newline
+        <$> pidp <* endOfLine
+        <*> procGroupIdp <* endOfLine
+        <*> ppidp <* endOfLine
+        <*> procCmdNamep <* endOfLine
+        <*> procUserIdp <* endOfLine
 
