@@ -12,7 +12,7 @@ addons:
     artifacts:
         paths:
         - $TRAVIS_BUILD_DIR/BenchResult.html
-        s3_region: "Ireland"
+        s3_region: "eu-west-1"
 
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
