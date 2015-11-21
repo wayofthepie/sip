@@ -11,7 +11,7 @@ addons:
         - libgmp-dev
     artifacts:
         paths:
-        - $HOME/BenchResult.html
+        - $TRAVIS_BUILD_DIR/BenchResult.html
         s3_region: "Ireland"
 
 # The different configurations we want to test. You could also do things like
