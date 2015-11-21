@@ -6,9 +6,13 @@ language: c
 
 # GHC depends on GMP. You can add other dependencies here as well.
 addons:
-  apt:
-    packages:
-    - libgmp-dev
+    apt:
+        packages:
+        - libgmp-dev
+    artifacts:
+        paths:
+        - $HOME/sip/BenchResult.html
+        s3_region: "Ireland"
 
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
@@ -34,9 +38,3 @@ cache:
   directories:
   - $HOME/.stack
 
-# Push reports to S3
-addons:
-    artifacts:
-        paths:
-        - $HOME/sip/BenchResult.html
-        s3_region: "Ireland"
