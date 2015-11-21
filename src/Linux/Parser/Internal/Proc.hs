@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-|
     Module          : Linux.Parser.Internal.Proc
@@ -64,7 +65,6 @@ module Linux.Parser.Internal.Proc (
     ) where
 
 import Control.Applicative hiding (empty)
-import qualified Data.ByteString.Char8 as BC
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.Maybe
@@ -91,13 +91,12 @@ data MappedMemory = MM {
         _pathname:: Maybe ByteString
     } deriving (Eq, Show)
 
-
-mmAddress    = _address
-mmPerms     = _perms
-mmOffset    = _offset
-mmDev       = _dev
-mmInode     = _inode
-mmPathname  = _pathname
+mmAddress  = _address
+mmPerms    = _perms
+mmOffset   = _offset
+mmDev      = _dev
+mmInode    = _inode
+mmPathname = _pathname
 
 
 -- | Data type for __\/proc\/[pid]\/limits__.
@@ -107,7 +106,6 @@ data Limit = Limit {
         _hlimit :: ByteString,
         _unit   :: Maybe ByteString
     } deriving (Eq, Show)
-
 
 limitName   = _limit
 softLimit   = _slimit
@@ -417,10 +415,10 @@ lunitp = peekChar >>= \c -> case c of
 -- | Parser for __\/proc\/[pid]\/mountinfo__.
 --
 -- @
---  (openFile "/proc/1/mountinfo" ReadMode) >>= 
---      \\h -> handleToInputStream h >>= 
+--  (openFile "/proc/1/mountinfo" ReadMode) >>=
+--      \\h -> handleToInputStream h >>=
 --          \\is -> parseFromStream mountInfop is
---  
+--
 --  [MountInfo {_mountid = "14", _parentid = "18", ...]
 -- @
 mountInfop :: Parser [MountInfo]
