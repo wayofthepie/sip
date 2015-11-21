@@ -15,7 +15,7 @@ import Linux.Parser.Internal.Proc
 unitTests :: TestTree
 unitTests =
     testGroup "Unit Tests"
-        [ testCaseSteps "Test /proc/net/dev parser" $ \step -> do
+        [ testCaseSteps "Test /proc/pid/maps parser" $ \step -> do
             step "Parse file"
             runMapsp >>= \result -> case result of
                 Right mms -> do
