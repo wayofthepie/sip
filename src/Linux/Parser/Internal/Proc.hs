@@ -299,7 +299,6 @@ mapsp :: Parser [MappedMemory]
 mapsp = manyTill ( mapsrowp <* endOfLine ) endOfInput
 
 
-
 -- | Parse a row of \/proc\/[pid]\/maps
 mapsrowp :: Parser MappedMemory
 mapsrowp = MM
@@ -317,13 +316,13 @@ mapsrowp = MM
         permp = takeWhile $ inClass "-rwxp"
 
         devicep :: Parser (ByteString, ByteString)
-        devicep = (,) <$> ( intp <* char ':' ) <*> intp
+        devicep = (,) <$> ( hdp <* char ':' ) <*> hdp
 
         pathnamep :: Parser (Maybe ByteString)
         pathnamep = peekChar >>= \c -> case c of
                 Just '\n'   -> return Nothing
                 _           -> liftA Just $
-                                takeWhile ( inClass "a-zA-Z0-9:/.[]-" )
+                                takeTill ( inClass "\n" )
 
 
 
