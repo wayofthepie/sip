@@ -4,3 +4,5 @@ dist/
 .stack-work
 
 *.swp
+
+*.html

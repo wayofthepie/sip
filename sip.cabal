@@ -55,3 +55,12 @@ test-suite top-level-parser-tests
     , tasty-smallcheck
     , tasty-quickcheck
     , sip
+
+benchmark bench-sip
+    type:       exitcode-stdio-1.0
+    main-is:    Bench.hs
+    hs-source-dirs: src, bench
+    build-depends:
+        base
+        , criterion
+    benchmark-options: -g
