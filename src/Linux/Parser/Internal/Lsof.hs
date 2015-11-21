@@ -12,8 +12,6 @@ module Linux.Parser.Internal.Lsof where
 
 import Control.Applicative
 import Data.Attoparsec.Text
---import Text.Parsec
---import Text.Parsec.String
 
 
 procCmdNamep :: Parser String
