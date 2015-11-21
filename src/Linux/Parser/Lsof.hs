@@ -19,7 +19,6 @@ module Linux.Parser.Lsof {-(
 
 
 import Control.Applicative hiding ((<|>))
-import Data.Graph.Inductive
 import Data.Attoparsec.Text
 
 import Linux.Parser.Internal.Lsof
