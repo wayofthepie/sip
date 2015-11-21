@@ -19,7 +19,7 @@ unitTests =
             step "Parse file"
             runNetDevp >>= \res -> case res of
                 Right (first, second) -> do
-                    step "Verifying first row of parsed data"
+                    step "Verifying parsed data"
                     verifyNetDevData first netDevpExpectedOne
                     verifyNetDevData second netDevpExpectedTwo
                 Left _ -> assertFailure "Parsing test/data/proc_net_dev failed!"

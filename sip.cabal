@@ -41,7 +41,10 @@ library
 test-suite top-level-parser-tests
   type:               exitcode-stdio-1.0
   main-is:            Spec.hs
-  other-modules:      ProcNet
+  other-modules:
+    Proc
+    , ProcNet
+
   hs-source-dirs:     test
   build-depends:
     base >= 4.7 && < 5

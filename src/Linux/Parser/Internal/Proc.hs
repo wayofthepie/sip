@@ -10,7 +10,7 @@
 module Linux.Parser.Internal.Proc (
         -- * Data Types
         -- ** MappedMemory : \/proc\/[pid]\/maps
-        MappedMemory (),
+        MappedMemory (..),
         mmAddress,
         mmPerms,
         mmOffset,
@@ -76,7 +76,7 @@ import Linux.Parser.Internal.Common
 
 -------------------------------------------------------------------------------
 -- | Data type for __\/proc\/[pid]\/maps__.
-data MappedMemory = MM {
+data MappedMemory = MappedMemory {
 
         _address :: (ByteString, ByteString),
         -- ^ Memory address in the form (start-address, end-address)
@@ -293,7 +293,7 @@ iop = manyTill ((,) <$> idp <*> ( skipJustSpacep *> intp <* skipMany space )  ) 
 --      \\h -> handleToInputStream h >>=
 --          \\is -> parseFromStream mapsp is
 --
---  [MM {_address = ("7f9c51069000","7f9c5107e000"), _perms = "r-xp", ...]
+--  [MappedMemory {_address = ("7f9c51069000","7f9c5107e000"), _perms = "r-xp", ...]
 -- @
 mapsp :: Parser [MappedMemory]
 mapsp = manyTill ( mapsrowp <* endOfLine ) endOfInput
@@ -301,7 +301,7 @@ mapsp = manyTill ( mapsrowp <* endOfLine ) endOfInput
 
 -- | Parse a row of \/proc\/[pid]\/maps
 mapsrowp :: Parser MappedMemory
-mapsrowp = MM
+mapsrowp = MappedMemory
     <$> addressp <* skipJustSpacep
     <*> permp <* skipJustSpacep
     <*> hdp <* skipJustSpacep

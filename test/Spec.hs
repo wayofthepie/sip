@@ -8,11 +8,12 @@ import Data.Attoparsec.ByteString
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import qualified Proc as Proc
 import qualified ProcNet as ProcNet
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [ProcNet.unitTests]
+tests = testGroup "Tests" [Proc.unitTests, ProcNet.unitTests]
 

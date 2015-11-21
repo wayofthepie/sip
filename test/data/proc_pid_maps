@@ -1,0 +1,3 @@
+5650fe94b000-5650fe94c000 rw-p 00003000 fd:04 16950326                   /usr/bin/abrt-watch-log
+7fd26b5b0000-7fd26b5b2000 rw-p 00000000 00:00 0
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
