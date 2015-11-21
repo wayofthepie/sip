@@ -63,4 +63,3 @@ benchmark bench-sip
     build-depends:
         base
         , criterion
-    benchmark-options: -g
