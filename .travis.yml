@@ -40,5 +40,12 @@ cache:
       - $HOME/.stack
 
 after_script:
-  - git clone https://github.com/rubik/stack-hpc-coveralls && pushd stack-hpc-coveralls && stack install
-  - popd && shc sip parser-unit-tests
+  # Only run shc if we pass no resolver, it will not work otherwise
+  - if [ -z $ARGS ]; then
+        git clone https://github.com/rubik/stack-hpc-coveralls;
+        pushd stack-hpc-coveralls;
+        stack install;
+        popd;
+        shc sip parser-unit-tests;
+    fi
+
