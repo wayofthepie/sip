@@ -98,15 +98,14 @@ expectedMemInfopData = [ MemInfo
 -- Tests for /proc/[pid]/stat parser.
 -------------------------------------------------------------------------------
 testProcStatp :: IO ()
-testProcStatp = parserTest mapsp
-    "test/data/proc_pid_maps"
+testProcStatp = parserTest procstatp
+    "test/data/proc_pid_stat"
     verify
-    expectedMapspData
-    "Parsing test/data/proc_pid_maps failed!"
+    expectedProcStatpData
+    "Parsing test/data/proc_pid_stat failed!"
   where
     verify a e = assertEqual
         "/proc/[pid]/stat parser returned incorrect value!" a e
-
 
 
 expectedProcStatpData :: ProcessStat
