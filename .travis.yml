@@ -41,7 +41,7 @@ cache:
 
 after_script:
   # Only run shc if we pass no resolver, it will not work otherwise
-  - if [ -z $ARGS ]; then
+  - if [ -z "$ARGS" ]; then
         git clone https://github.com/rubik/stack-hpc-coveralls;
         pushd stack-hpc-coveralls;
         stack install;
