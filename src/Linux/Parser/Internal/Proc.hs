@@ -76,19 +76,18 @@ import Linux.Parser.Internal.Common
 
 -------------------------------------------------------------------------------
 -- | Data type for __\/proc\/[pid]\/maps__.
-data MappedMemory = MappedMemory {
+data MappedMemory = MappedMemory
+    { _address :: (ByteString, ByteString)
+      -- ^ Memory address in the form (start-address, end-address)
 
-        _address :: (ByteString, ByteString),
-        -- ^ Memory address in the form (start-address, end-address)
+    , _perms   :: ByteString
+    , _offset  :: ByteString
 
-        _perms   :: ByteString,
-        _offset  :: ByteString,
+    , _dev     :: (ByteString, ByteString)
+      -- ^ Device number in the form (Major num, Minor num)
 
-        _dev     :: (ByteString, ByteString),
-        -- ^ Device number in the form (Major num, Minor num)
-
-        _inode   :: ByteString,
-        _pathname:: Maybe ByteString
+    , _inode   :: ByteString
+    , _pathname:: Maybe ByteString
     } deriving (Eq, Show)
 
 mmAddress  = _address
@@ -100,11 +99,11 @@ mmPathname = _pathname
 
 
 -- | Data type for __\/proc\/[pid]\/limits__.
-data Limit = Limit {
-        _limit  :: [ByteString],
-        _slimit :: ByteString,
-        _hlimit :: ByteString,
-        _unit   :: Maybe ByteString
+data Limit = Limit
+    { _limit  :: [ByteString]
+    , _slimit :: ByteString
+    , _hlimit :: ByteString
+    , _unit   :: Maybe ByteString
     } deriving (Eq, Show)
 
 limitName   = _limit
@@ -114,14 +113,14 @@ unitOfLimit = _unit
 
 
 -- | Data type for __\/proc\/[pid]\/statm__.
-data Statm = Statm {
-        _size       :: ByteString,
-        _resident   :: ByteString,
-        _share      :: ByteString,
-        _text       :: ByteString,
-        _lib        :: ByteString,
-        _data       :: ByteString,
-        _dt         :: ByteString
+data Statm = Statm
+    { _size       :: ByteString
+    , _resident   :: ByteString
+    , _share      :: ByteString
+    , _text       :: ByteString
+    , _lib        :: ByteString
+    , _data       :: ByteString
+    , _dt         :: ByteString
     } deriving (Eq, Show)
 
 
@@ -135,17 +134,17 @@ statmDt         = _dt
 
 
 -- Data type for __\/proc\/[pid]\/mountinfo__.
-data MountInfo = MountInfo {
-        _mountid        :: ByteString,
-        _parentid       :: ByteString,
-        _devmajmin      :: (ByteString, ByteString),
-        _root           :: ByteString,
-        _mountpoint     :: ByteString,
-        _mountopts      :: [ByteString],
-        _optionalfields :: Maybe [(ByteString, ByteString)],
-        _fstype         :: ByteString,
-        _mountsource    :: ByteString,
-        _superoptions   :: [ByteString]
+data MountInfo = MountInfo
+    { _mountid        :: ByteString
+    , _parentid       :: ByteString
+    , _devmajmin      :: (ByteString, ByteString)
+    , _root           :: ByteString
+    , _mountpoint     :: ByteString
+    , _mountopts      :: [ByteString]
+    , _optionalfields :: Maybe [(ByteString, ByteString)]
+    , _fstype         :: ByteString
+    , _mountsource    :: ByteString
+    , _superoptions   :: [ByteString]
     } deriving (Eq, Show)
 
 
