@@ -56,10 +56,10 @@ test-suite parser-unit-tests
     , tasty-quickcheck
     , sip
 
-benchmark bench-sip
-    type:       exitcode-stdio-1.0
-    main-is:    Bench.hs
-    hs-source-dirs: src, bench
-    build-depends:
-        base
-        , criterion
+--benchmark bench-sip
+--    type:       exitcode-stdio-1.0
+--    main-is:    Bench.hs
+--    hs-source-dirs: src, bench
+--    build-depends:
+--        base
+--        , criterion
