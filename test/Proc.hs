@@ -15,7 +15,7 @@ import Linux.Parser.Internal.Proc
 unitTests :: TestTree
 unitTests =
     testGroup "Unit Tests"
-        [ testCase "Test /proc/pid/maps parser" $
+        [ testCase "Test /proc/[pid]/maps parser" $
             parserTest mapsp
                 "test/data/proc_pid_maps"
                 verifyMapspData expectedMapspData
@@ -27,6 +27,13 @@ unitTests =
                 verifyMemInfop
                 expectedMemInfopData
                 "Parsing test/data/proc_meminfo failed!"
+
+        , testCase "Test /proc/[pid]/stat parser" $
+            parserTest procstatp
+                "test/data/proc_pid_stat"
+                verifyProcStatpData
+                expectedProcStatpData
+                "Parsing test/data/proc_pid_stat failed!"
         ]
 
 parserTest ::
@@ -97,6 +104,73 @@ expectedMemInfopData = [ MemInfo
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/stat parser.
 -------------------------------------------------------------------------------
+-- TODO : Finish!
+verifyProcStatpData :: ProcessStat -> ProcessStat -> IO ()
+verifyProcStatpData actual expected = do
+    assertEqual "Pid incorrect"     (_pid actual) (_pid expected)
+    assertEqual "Command incorrect" (_comm actual) (_comm expected)
+    assertEqual "State incorrect"   (_state actual) (_state expected)
+    assertEqual "Parent pid incorrect" (_ppid actual) (_ppid expected)
+    assertEqual "Parent group incorrect" (_pgrp actual) (_pgrp expected)
+    assertEqual "Session incorrect" (_session actual) (_session expected)
+    assertEqual "Controlling terminal incorrect" (_tty_nr actual) (_tty_nr expected)
+
+
+expectedProcStatpData :: ProcessStat
+expectedProcStatpData = ProcessStat
+    { _pid      = "1"
+    , _comm     = "(bash)"
+    , _state    = "S"
+    , _ppid     = "0"
+    , _pgrp     = "1"
+    , _session  = "1"
+    , _tty_nr   = "34822"
+    , _tpgid    = "1"
+    , _flags    = "4210944"
+    , _minflt   = "304711"
+    , _cminflt  = "84696478"
+    , _majflt   = "288"
+    , _cmajflt  = "12436"
+    , _utime    = "410"
+    , _stime    = "104"
+    , _cutime   = "386473"
+    , _cstime   = "22566"
+    , _priority = "20"
+    , _nice     = "0"
+    , _num_threads  = "1"
+    , _itrealvalue  = "0"
+    , _starttime    = "89389"
+    , _vsize        = "121729024"
+    , _rss          = "1057"
+    , _rsslim       = "18446744073709551615"
+    , _startcode    = "94766545403904"
+    , _endcode      = "94766546418740"
+    , _startstack   = "140722636490944"
+    , _kstkesp      = "140722636486088"
+    , _kstkeip      = "140181753122704"
+    , _signal       = "0"
+    , _blocked      = "0"
+    , _sigignore    = "3670020"
+    , _sigcatch     = "1266777851"
+    , _wchan        = "18446744071579760626"
+    , _nswap        = "0"
+    , _cnswap       = "0"
+    , _exiti_signal = "17"
+    , _processor    = "5"
+    , _rt_priority  = "0"
+    , _policy       = "0"
+    , _delayacct_blkio_ticks = "125"
+    , _guest_time   = "0"
+    , _cguest_time  = "0"
+    , _start_data   = "94766548516424"
+    , _end_data     = "94766548563304"
+    , _start_brk    = "94766576685056"
+    , _arg_start    = "140722636496675"
+    , _arg_end      = "140722636496680"
+    , _env_start    = "140722636496680"
+    , _env_end      = "140722636496874"
+    , _exit_code    = "0"
+    }
 
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/maps parser.

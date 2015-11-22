@@ -51,6 +51,9 @@ module Linux.Parser.Internal.Proc
     -- * MemInfo : \/proc\/meminfo
     , MemInfo (..)
 
+    -- * ProcessStat : \/proc\/\[pid\]\/stat
+    , ProcessStat (..)
+
     -- * Parsers
     , meminfop
     , loadavgp
@@ -167,6 +170,7 @@ data MemInfo = MemInfo
     , _miSize      :: ByteString
     , _miQualifier :: Maybe ByteString
     } deriving (Eq, Show)
+
 
 -- | Data type for \/proc\/[pid]\/stat. See __man_proc__ for more in
 -- depth information.

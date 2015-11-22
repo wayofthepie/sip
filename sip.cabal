@@ -36,7 +36,7 @@ library
                         mtl
   hs-source-dirs:       src
   default-language:     Haskell2010
-  ghc-options:     -Wall -fhpc
+  ghc-options:     -Wall
 
 test-suite parser-unit-tests
   type:               exitcode-stdio-1.0
