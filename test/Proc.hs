@@ -36,6 +36,7 @@ unitTests =
                 "Parsing test/data/proc_pid_stat failed!"
         ]
 
+
 parserTest ::
     Parser a
     -> String
@@ -58,8 +59,10 @@ runParser parser file = do
         Right result -> return $ Right result
         Left _       -> return $ Left ()
 
+
 verifyParserOutput :: (a -> a -> IO ()) -> a -> a -> IO ()
 verifyParserOutput f expected actual = f actual expected
+
 
 verifyListData :: (a -> a -> IO ()) -> [a] -> [a] -> IO ()
 verifyListData f actual expected =
@@ -104,16 +107,10 @@ expectedMemInfopData = [ MemInfo
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/stat parser.
 -------------------------------------------------------------------------------
--- TODO : Finish!
 verifyProcStatpData :: ProcessStat -> ProcessStat -> IO ()
-verifyProcStatpData actual expected = do
-    assertEqual "Pid incorrect"     (_pid actual) (_pid expected)
-    assertEqual "Command incorrect" (_comm actual) (_comm expected)
-    assertEqual "State incorrect"   (_state actual) (_state expected)
-    assertEqual "Parent pid incorrect" (_ppid actual) (_ppid expected)
-    assertEqual "Parent group incorrect" (_pgrp actual) (_pgrp expected)
-    assertEqual "Session incorrect" (_session actual) (_session expected)
-    assertEqual "Controlling terminal incorrect" (_tty_nr actual) (_tty_nr expected)
+verifyProcStatpData actual expected =
+    assertEqual "/proc/[pid]/stat parser returned incorrect value!"
+        actual expected
 
 
 expectedProcStatpData :: ProcessStat
