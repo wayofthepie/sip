@@ -39,3 +39,6 @@ cache:
   directories:
       - $HOME/.stack
 
+after_script:
+  - travis_retry curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.1.0/shc-linux-x64-$GHCVER.tar.bz2 | tar -xj
+  - ./shc stack-hpc-coveralls shc-test
