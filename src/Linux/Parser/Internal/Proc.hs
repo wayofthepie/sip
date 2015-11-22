@@ -26,7 +26,7 @@ module Linux.Parser.Internal.Proc
     , unitOfLimit
 
     -- ** Statm : \/proc\/[pid]\/statm
-    , Statm ()
+    , Statm (..)
     , statmSize
     , statmResident
     , statmShare

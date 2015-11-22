@@ -14,7 +14,7 @@ import Linux.Parser.Internal.ProcNet
 
 unitTests :: TestTree
 unitTests =
-    testGroup "Unit Tests"
+    testGroup "ProcNet Unit Tests"
         [ testCaseSteps "Test /proc/net/dev parser" $ \step -> do
             step "Parse file"
             runNetDevp >>= \res -> case res of

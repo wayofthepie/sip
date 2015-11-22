@@ -14,27 +14,13 @@ import Linux.Parser.Internal.Proc
 
 unitTests :: TestTree
 unitTests =
-    testGroup "Unit Tests"
-        [ testCase "Test /proc/[pid]/maps parser" $
-            parserTest mapsp
-                "test/data/proc_pid_maps"
-                verifyMapspData expectedMapspData
-                "Parsing test/data/proc_pid_maps failed!"
-
-        , testCase "Test /proc/meminfo parser" $
-            parserTest meminfop
-                "test/data/proc_meminfo"
-                verifyMemInfop
-                expectedMemInfopData
-                "Parsing test/data/proc_meminfo failed!"
-
-        , testCase "Test /proc/[pid]/stat parser" $
-            parserTest procstatp
-                "test/data/proc_pid_stat"
-                verifyProcStatpData
-                expectedProcStatpData
-                "Parsing test/data/proc_pid_stat failed!"
+    testGroup "Proc Unit Tests"
+        [ testCase "Test /proc/[pid]/maps parser" testMapsp
+        , testCase "Test /proc/meminfo parser" testMemInfop
+        , testCase "Test /proc/[pid]/stat parser" testProcStatp
+        , testCase "Test /proc/[pid]/statm parser" testStatmp
         ]
+
 
 parserTest ::
     Parser a
@@ -58,8 +44,10 @@ runParser parser file = do
         Right result -> return $ Right result
         Left _       -> return $ Left ()
 
+
 verifyParserOutput :: (a -> a -> IO ()) -> a -> a -> IO ()
 verifyParserOutput f expected actual = f actual expected
+
 
 verifyListData :: (a -> a -> IO ()) -> [a] -> [a] -> IO ()
 verifyListData f actual expected =
@@ -69,11 +57,16 @@ verifyListData f actual expected =
 -------------------------------------------------------------------------------
 -- Tests for /proc/meminfo parser.
 -------------------------------------------------------------------------------
-verifyMemInfop :: [MemInfo] -> [MemInfo] -> IO ()
-verifyMemInfop actual expected =
-    verifyListData verifyMemInfop' actual expected
+testMemInfop :: IO ()
+testMemInfop =
+    let verify = verifyListData testMemInfop'
+    in  parserTest meminfop
+            "test/data/proc_meminfo"
+            verify
+            expectedMemInfopData
+            "Parsing test/data/proc_meminfo failed!"
   where
-    verifyMemInfop' a e = do
+    testMemInfop' a e = do
         assertEqual "Parameter incorrect" (_miParam a) (_miParam e)
         assertEqual "Size incorrect" (_miSize a) (_miSize e)
         assertEqual "Qualifier incorrect" (_miQualifier a) (_miQualifier e)
@@ -104,16 +97,16 @@ expectedMemInfopData = [ MemInfo
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/stat parser.
 -------------------------------------------------------------------------------
--- TODO : Finish!
-verifyProcStatpData :: ProcessStat -> ProcessStat -> IO ()
-verifyProcStatpData actual expected = do
-    assertEqual "Pid incorrect"     (_pid actual) (_pid expected)
-    assertEqual "Command incorrect" (_comm actual) (_comm expected)
-    assertEqual "State incorrect"   (_state actual) (_state expected)
-    assertEqual "Parent pid incorrect" (_ppid actual) (_ppid expected)
-    assertEqual "Parent group incorrect" (_pgrp actual) (_pgrp expected)
-    assertEqual "Session incorrect" (_session actual) (_session expected)
-    assertEqual "Controlling terminal incorrect" (_tty_nr actual) (_tty_nr expected)
+testProcStatp :: IO ()
+testProcStatp = parserTest mapsp
+    "test/data/proc_pid_maps"
+    verify
+    expectedMapspData
+    "Parsing test/data/proc_pid_maps failed!"
+  where
+    verify a e = assertEqual
+        "/proc/[pid]/stat parser returned incorrect value!" a e
+
 
 
 expectedProcStatpData :: ProcessStat
@@ -172,14 +165,51 @@ expectedProcStatpData = ProcessStat
     , _exit_code    = "0"
     }
 
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/[pid]/statm parser.
+-------------------------------------------------------------------------------
+testStatmp :: IO ()
+testStatmp = parserTest statmp
+    "test/data/proc_pid_statm"
+    verify
+    expectedStatmpData
+    "Parsing test/data/proc_pid_statm failed!"
+  where
+    verify a e = do
+        assertEqual "Size incorrect" (_size a) (_size e)
+        assertEqual "Resident size incorrect" (_resident a) (_resident e)
+        assertEqual "Share incorrect" (_share a) (_share e)
+        assertEqual "Text incorrect" (_text a) (_text e)
+        assertEqual "Lib incorrect" (_lib a) (_lib e)
+        assertEqual "Data incorrect" (_data a) (_data e)
+        assertEqual "Dt incorrect" (_dt a) (_dt e)
+
+
+expectedStatmpData :: Statm
+expectedStatmpData = Statm
+    { _size     = "40453"
+    , _resident = "2582"
+    , _share    = "1395"
+    , _text     = "570"
+    , _lib      = "0"
+    , _data     = "1190"
+    , _dt       = "0"
+    }
+
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/maps parser.
 -------------------------------------------------------------------------------
-verifyMapspData :: [MappedMemory] -> [MappedMemory] -> IO ()
-verifyMapspData actual expected =
-    verifyListData verifyMapspData' actual expected
+testMapsp :: IO ()
+testMapsp =
+    let verify = verifyListData testMapsp'
+    in parserTest mapsp
+                "test/data/proc_pid_maps"
+                verify
+                expectedMapspData
+                "Parsing test/data/proc_pid_maps failed!"
   where
-    verifyMapspData' a e = do
+    testMapsp' a e = do
         assertEqual "Memory address incorrect"  (_address a) (_address e)
         assertEqual "Permissions incorrect"     (_perms a) (_perms e)
         assertEqual "Offset incorrect"          (_offset a) (_offset e)
