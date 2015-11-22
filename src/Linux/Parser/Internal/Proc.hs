@@ -160,6 +160,12 @@ miMountSource   = _mountsource
 miSuperOptions  = _superoptions
 
 
+data MemInfo = MemInfo
+    { _miParam     :: ByteString
+    , _miSize      :: ByteString
+    , _miQualifier :: Maybe ByteString
+    } deriving (Eq, Show)
+
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/meminfo__.
 --
@@ -170,8 +176,8 @@ miSuperOptions  = _superoptions
 --
 -- [("MemTotal","4052076",Just "kB"),("MemFree","3450628",Just "kB"), ...]
 -- @
-meminfop :: Parser [(ByteString, ByteString, Maybe ByteString)]
-meminfop = manyTill ((,,)
+meminfop :: Parser [MemInfo] --[(ByteString, ByteString, Maybe ByteString)]
+meminfop = manyTill ( MemInfo
     <$> idp
     <*> ( skipJustSpacep *> intp <* skipJustSpacep )
     <*> unitp <* skipMany space) endOfInput
