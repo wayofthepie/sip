@@ -40,5 +40,5 @@ cache:
       - $HOME/.stack
 
 after_script:
-  - git clone https://github.com/rubik/stack-hpc-coveralls && stack install
+  - git clone https://github.com/rubik/stack-hpc-coveralls && cd stack-hpc-coveralls && stack install
   - shc sip parser-unit-tests
