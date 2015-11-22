@@ -14,10 +14,11 @@ import Linux.Parser.Internal.Proc
 
 unitTests :: TestTree
 unitTests =
-    testGroup "Unit Tests"
+    testGroup "Proc Unit Tests"
         [ testCase "Test /proc/[pid]/maps parser" testMapsp
         , testCase "Test /proc/meminfo parser" testMemInfop
         , testCase "Test /proc/[pid]/stat parser" testProcStatp
+        , testCase "Test /proc/[pid]/statm parser" testStatmp
         ]
 
 
@@ -162,6 +163,38 @@ expectedProcStatpData = ProcessStat
     , _env_start    = "140722636496680"
     , _env_end      = "140722636496874"
     , _exit_code    = "0"
+    }
+
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/[pid]/statm parser.
+-------------------------------------------------------------------------------
+testStatmp :: IO ()
+testStatmp = parserTest statmp
+    "test/data/proc_pid_statm"
+    verify
+    expectedStatmpData
+    "Parsing test/data/proc_pid_statm failed!"
+  where
+    verify a e = do
+        assertEqual "Size incorrect" (_size a) (_size e)
+        assertEqual "Resident size incorrect" (_resident a) (_resident e)
+        assertEqual "Share incorrect" (_share a) (_share e)
+        assertEqual "Text incorrect" (_text a) (_text e)
+        assertEqual "Lib incorrect" (_lib a) (_lib e)
+        assertEqual "Data incorrect" (_data a) (_data e)
+        assertEqual "Dt incorrect" (_dt a) (_dt e)
+
+
+expectedStatmpData :: Statm
+expectedStatmpData = Statm
+    { _size     = "40453"
+    , _resident = "2582"
+    , _share    = "1395"
+    , _text     = "570"
+    , _lib      = "0"
+    , _data     = "1190"
+    , _dt       = "0"
     }
 
 -------------------------------------------------------------------------------
