@@ -9,7 +9,7 @@
 
 module Linux.Parser.Internal.Proc
     ( -- * Data Types
-      -- ** MappedMemory : \/proc\/[pid]\/maps
+    -- ** MappedMemory : \/proc\/[pid]\/maps
       MappedMemory (..)
     , mmAddress
     , mmPerms
@@ -18,14 +18,14 @@ module Linux.Parser.Internal.Proc
     , mmInode
     , mmPathname
 
-      -- ** Limits : \/proc\/[pid]\/limits
+    -- ** Limits : \/proc\/[pid]\/limits
     , Limit ()
     , limitName
     , softLimit
     , hardLimit
     , unitOfLimit
 
-      -- ** Statm : \/proc\/[pid]\/statm
+    -- ** Statm : \/proc\/[pid]\/statm
     , Statm ()
     , statmSize
     , statmResident
@@ -35,7 +35,7 @@ module Linux.Parser.Internal.Proc
     , statmData
     , statmDt
 
-     -- ** MountInfo : \/proc\/[pid]\/mountinfo
+    -- ** MountInfo : \/proc\/[pid]\/mountinfo
     , MountInfo ()
     , miMountId
     , miParentId
@@ -48,8 +48,10 @@ module Linux.Parser.Internal.Proc
     , miMountSource
     , miSuperOptions
 
+    -- * MemInfo : \/proc\/meminfo
+    , MemInfo (..)
 
-      -- * Parsers
+    -- * Parsers
     , meminfop
     , loadavgp
     , uptimep

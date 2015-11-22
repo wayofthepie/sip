@@ -38,7 +38,7 @@ library
   default-language:     Haskell2010
   ghc-options:     -Wall -fhpc
 
-test-suite top-level-parser-tests
+test-suite parser-unit-tests
   type:               exitcode-stdio-1.0
   main-is:            Spec.hs
   other-modules:
