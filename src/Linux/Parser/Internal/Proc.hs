@@ -7,61 +7,61 @@
     The examples below use the __io-streams__ library.
 -}
 
-module Linux.Parser.Internal.Proc (
-        -- * Data Types
-        -- ** MappedMemory : \/proc\/[pid]\/maps
-        MappedMemory (..),
-        mmAddress,
-        mmPerms,
-        mmOffset,
-        mmDev,
-        mmInode,
-        mmPathname,
+module Linux.Parser.Internal.Proc
+    ( -- * Data Types
+      -- ** MappedMemory : \/proc\/[pid]\/maps
+      MappedMemory (..)
+    , mmAddress
+    , mmPerms
+    , mmOffset
+    , mmDev
+    , mmInode
+    , mmPathname
 
-        -- ** Limits : \/proc\/[pid]\/limits
-        Limit (),
-        limitName,
-        softLimit,
-        hardLimit,
-        unitOfLimit,
+      -- ** Limits : \/proc\/[pid]\/limits
+    , Limit ()
+    , limitName
+    , softLimit
+    , hardLimit
+    , unitOfLimit
 
-        -- ** Statm : \/proc\/[pid]\/statm
-        Statm (),
-        statmSize,
-        statmResident,
-        statmShare,
-        statmText,
-        statmLib,
-        statmData,
-        statmDt,
+      -- ** Statm : \/proc\/[pid]\/statm
+    , Statm ()
+    , statmSize
+    , statmResident
+    , statmShare
+    , statmText
+    , statmLib
+    , statmData
+    , statmDt
 
-        -- ** MountInfo : \/proc\/[pid]\/mountinfo
-        MountInfo (),
-        miMountId,
-        miParentId,
-        miDevMajMinNum,
-        miRoot,
-        miMountPoint,
-        miMountOptions,
-        miOptionalFields,
-        miFsType,
-        miMountSource,
-        miSuperOptions,
+     -- ** MountInfo : \/proc\/[pid]\/mountinfo
+    , MountInfo ()
+    , miMountId
+    , miParentId
+    , miDevMajMinNum
+    , miRoot
+    , miMountPoint
+    , miMountOptions
+    , miOptionalFields
+    , miFsType
+    , miMountSource
+    , miSuperOptions
 
 
-        -- * Parsers
-        meminfop,
-        loadavgp,
-        uptimep,
-        commp,
-        iop,
-        mapsp,
-        environp,
-        procstatp,
-        statmp,
-        numamapsp,
-        limitsp,
-        mountInfop
+      -- * Parsers
+    , meminfop
+    , loadavgp
+    , uptimep
+    , commp
+    , iop
+    , mapsp
+    , environp
+    , procstatp
+    , statmp
+    , numamapsp
+    , limitsp
+    , mountInfop
     ) where
 
 import Control.Applicative hiding (empty)
