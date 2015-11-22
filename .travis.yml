@@ -6,9 +6,13 @@ language: c
 
 # GHC depends on GMP. You can add other dependencies here as well.
 addons:
-  apt:
-    packages:
-    - libgmp-dev
+    apt:
+        packages:
+        - libgmp-dev
+    artifacts:
+        paths:
+        - $TRAVIS_BUILD_DIR/BenchResult.html
+        s3_region: "eu-west-1"
 
 # The different configurations we want to test. You could also do things like
 # change flags or use --stack-yaml to point to a different file.
@@ -23,13 +27,18 @@ before_install:
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
 - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+- pwd && ls -la
 
 # This line does all of the work: installs GHC if necessary, build the library,
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
-script: stack $ARGS --no-terminal --install-ghc test --haddock
+script: stack build $ARGS --no-terminal --install-ghc --test --coverage --bench --benchmark-arguments "-o BenchResult.html"
 
 # Caching so the next build will be fast too.
 cache:
   directories:
-  - $HOME/.stack
+      - $HOME/.stack
+
+after_script:
+  - travis_retry curl -L https://github.com/rubik/stack-hpc-coveralls/releases/download/v0.0.1.0/shc-linux-x64-$GHCVER.tar.bz2 | tar -xj
+  - ./shc stack-hpc-coveralls shc-test
