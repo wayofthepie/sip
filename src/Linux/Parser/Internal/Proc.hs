@@ -53,7 +53,7 @@ module Linux.Parser.Internal.Proc
 
     -- * ProcessStat : \/proc\/\[pid\]\/stat
     , ProcessStat (..)
-
+    , LoadAvg (..)
     -- * Parsers
     , meminfop
     , loadavgp
@@ -403,9 +403,24 @@ statmp = Statm
 --
 --  ("0.00","0.01","0.05")
 -- @
-loadavgp :: Parser (ByteString, ByteString, ByteString)
-loadavgp = (,,) <$> doublep <*> doublep <*> doublep
 
+data LoadAvg = LoadAvg
+    { _runQLen1 :: ByteString
+    , _runQLen5 :: ByteString
+    , _runQLen15:: ByteString
+    , _runnable :: ByteString
+    , _exists   :: ByteString
+    , _latestPid:: ByteString
+    } deriving (Eq, Show)
+
+loadavgp :: Parser LoadAvg
+loadavgp = LoadAvg <$>
+    doublep
+    <*> doublep
+    <*> doublep
+    <*> intp <* char '/' <* skipJustSpacep
+    <*> intp <* skipJustSpacep
+    <*> intp
 
 
 ------------------------------------------------------------------------------

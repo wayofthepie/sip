@@ -19,6 +19,7 @@ unitTests =
         , testCase "Test /proc/meminfo parser" testMemInfop
         , testCase "Test /proc/[pid]/stat parser" testProcStatp
         , testCase "Test /proc/[pid]/statm parser" testStatmp
+        , testCase "Test /proc/loadavg parser" testLoadAvgp
         ]
 
 
@@ -164,6 +165,34 @@ expectedProcStatpData = ProcessStat
     , _exit_code    = "0"
     }
 
+-------------------------------------------------------------------------------
+-- Tests for /proc/loadavg parser.
+-------------------------------------------------------------------------------
+testLoadAvgp :: IO ()
+testLoadAvgp = parserTest loadavgp
+    "test/data/proc_loadavg"
+    verify
+    expectedLoadAvgpData
+    "Parsing test/data/proc_loadavg failed!"
+  where
+    verify actual expected = do
+        assertEqual "1 min run queue incorrect" (_runQLen1 actual) (_runQLen1 expected)
+        assertEqual "5 min run queue incorrect" (_runQLen5 actual) (_runQLen5 expected)
+        assertEqual "15 min run queue incorrect" (_runQLen15 actual) (_runQLen15 expected)
+        assertEqual "runnable incorrect" (_runnable actual) (_runnable expected)
+        assertEqual "exists incorrect" (_exists actual) (_exists expected)
+        assertEqual "latest pid incorrect" (_latestPid actual) (_latestPid expected)
+
+
+expectedLoadAvgpData :: LoadAvg
+expectedLoadAvgpData = LoadAvg
+    { _runQLen1 = "0.20"
+    , _runQLen5 = "0.15"
+    , _runQLen15= "0.07"
+    , _runnable = "1"
+    , _exists   = "537"
+    , _latestPid= "163"
+    }
 
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/statm parser.
