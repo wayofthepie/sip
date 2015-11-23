@@ -3,11 +3,13 @@
     #-}
 module Proc where
 
-import qualified Data.ByteString as BS
-import Data.Attoparsec.ByteString
+import qualified Data.ByteString.Char8 as BS
+import Data.Attoparsec.ByteString.Char8
+import Data.Monoid
 
 import Test.Tasty
 import Test.Tasty.HUnit
+import Test.Tasty.QuickCheck as QC
 
 import Linux.Parser.Internal.Proc
 
@@ -21,6 +23,10 @@ unitTests =
         , testCase "Test /proc/[pid]/statm parser" testStatmp
         , testCase "Test /proc/loadavg parser" testLoadAvgp
         ]
+
+qcProps :: TestTree
+qcProps = testGroup "quickcheck parser tests"
+    [ testProperty "uptime parser" propUptime ]
 
 
 parserTest ::
@@ -193,6 +199,32 @@ expectedLoadAvgpData = LoadAvg
     , _exists   = "537"
     , _latestPid= "163"
     }
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/loadavg parser.
+-------------------------------------------------------------------------------
+run :: Parser a -> BS.ByteString -> Maybe a
+run p input = case parseOnly p input of
+    Right x -> Just x
+    Left _  -> Nothing
+
+newtype AllowedUptime = AllowedUptime { unwrapUptime :: Uptime }
+
+instance Arbitrary Uptime where
+    arbitrary = uptimeFromInts
+        <$> choose (0,1000000)
+        <*> choose (0,99)
+        <*> choose (0,1000000)
+        <*> choose (0,99)
+
+uptimeFromInts :: Int -> Int -> Int -> Int -> Uptime
+uptimeFromInts n1 d1 n2 d2 = let toBs = BS.pack . show in
+   Uptime (toBs n1 <> "." <> toBs d1) (toBs n2 <> "." <> toBs d2)
+
+propUptime :: Uptime -> Bool
+propUptime uptime@(Uptime d1 d2) =
+    run uptimep (d1 <> BS.pack " " <> d2 <> BS.pack "\n") == Just uptime
+
 
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/statm parser.

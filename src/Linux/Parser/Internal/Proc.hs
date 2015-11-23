@@ -54,6 +54,8 @@ module Linux.Parser.Internal.Proc
     -- * ProcessStat : \/proc\/\[pid\]\/stat
     , ProcessStat (..)
     , LoadAvg (..)
+    , Uptime (..)
+
     -- * Parsers
     , meminfop
     , loadavgp
@@ -435,9 +437,14 @@ loadavgp = LoadAvg <$>
 --
 --  ("13048.12","78085.17")
 -- @
-uptimep :: Parser (ByteString, ByteString)
-uptimep = (,) <$> doublep <*> doublep
 
+data Uptime = Uptime
+    { _upSec    :: ByteString
+    , _idleTime :: ByteString
+    } deriving (Eq,Show)
+
+uptimep :: Parser Uptime
+uptimep = Uptime <$> doublep <*> doublep
 
 
 ------------------------------------------------------------------------------

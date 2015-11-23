@@ -15,5 +15,9 @@ main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [Proc.unitTests, ProcNet.unitTests]
+tests = testGroup "Tests"
+    [ Proc.qcProps
+    , Proc.unitTests
+    , ProcNet.unitTests
+    ]
 

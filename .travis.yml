@@ -46,6 +46,6 @@ after_script:
         pushd stack-hpc-coveralls;
         stack install;
         popd;
-        shc sip parser-unit-tests;
+        shc sip parser-tests;
     fi
 
