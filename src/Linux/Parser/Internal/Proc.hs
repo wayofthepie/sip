@@ -55,6 +55,7 @@ module Linux.Parser.Internal.Proc
     , ProcessStat (..)
     , LoadAvg (..)
     , Uptime (..)
+    , ProcIO (..)
 
     -- * Parsers
     , meminfop
@@ -489,6 +490,7 @@ iop = ProcIO <$> rowp <*> rowp <*> rowp <*> rowp
     <*> rowp <*> rowp <*> rowp <* endOfInput
   where
     rowp = idp *> ( skipJustSpacep *> intp <* skipMany space )
+
 
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/[pid]\/maps__.

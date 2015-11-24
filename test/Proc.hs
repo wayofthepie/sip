@@ -28,6 +28,7 @@ qcProps :: TestTree
 qcProps = testGroup "quickcheck parser tests"
     [ testProperty "/proc/uptime parser" propUptimep
     , testProperty "/proc/comm parser" propCommp
+    , testProperty "/proc/[pid]/io parser" propProcIOp
     ]
 
 
@@ -255,6 +256,45 @@ instance Arbitrary AllowedComm where
 
 propCommp :: AllowedComm -> Bool
 propCommp (AllowedComm bs) = run commp bs == Just bs
+
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/[pid]/io parser.
+-------------------------------------------------------------------------------
+data AllowedProcIO = AllowedProcIO
+    { unwrapProcIO :: BS.ByteString
+    , actualProcIO :: ProcIO
+    } deriving (Eq, Show)
+
+instance Arbitrary AllowedProcIO where
+    arbitrary = allowedProcIOFromInts
+        <$> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+
+
+allowedProcIOFromInts ::
+     Int -> Int -> Int -> Int -> Int -> Int -> Int -> AllowedProcIO
+allowedProcIOFromInts rc wc sw sr rb wb cwb =
+    let toBs  = BS.pack . show
+        bsGen =
+            "rchar:" <> toBs rc <> "\n" <>
+            "wchar:" <> toBs wc <> "\n" <>
+            "syscr:" <> toBs sw <> "\n" <>
+            "syscw:" <> toBs sr <> "\n" <>
+            "read_bytes:"   <> toBs rb <> "\n" <>
+            "write_bytes:"  <> toBs wb <> "\n" <>
+            "cancelled_write_bytes:" <> toBs cwb <> "\n"
+        procIOgen = ProcIO (toBs rc) (toBs wc) (toBs sw)
+            (toBs sr) (toBs rb) (toBs wb) (toBs cwb)
+    in  AllowedProcIO bsGen procIOgen
+
+propProcIOp :: AllowedProcIO -> Bool
+propProcIOp (AllowedProcIO bs procIo) = run iop bs == Just procIo
 
 
 -------------------------------------------------------------------------------
