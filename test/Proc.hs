@@ -208,22 +208,32 @@ run p input = case parseOnly p input of
     Right x -> Just x
     Left _  -> Nothing
 
-newtype AllowedUptime = AllowedUptime { unwrapUptime :: Uptime }
+data AllowedUptime = AllowedUptime
+    { uptimeBS      :: BS.ByteString
+    -- ^ The string to parse
+    , actualUptime  :: Uptime
+    -- ^ What the Uptime should be if the generated string is parsed
+    } deriving (Eq, Show)
 
-instance Arbitrary Uptime where
-    arbitrary = uptimeFromInts
+instance Arbitrary AllowedUptime where
+    arbitrary = allowedUptimeFromInts
         <$> choose (0,1000000)
         <*> choose (0,99)
         <*> choose (0,1000000)
         <*> choose (0,99)
 
-uptimeFromInts :: Int -> Int -> Int -> Int -> Uptime
-uptimeFromInts n1 d1 n2 d2 = let toBs = BS.pack . show in
-   Uptime (toBs n1 <> "." <> toBs d1) (toBs n2 <> "." <> toBs d2)
+allowedUptimeFromInts :: Int -> Int -> Int -> Int -> AllowedUptime
+allowedUptimeFromInts n1 d1 n2 d2 =
+    let toBs    = BS.pack . show
+        upTime  = (toBs n1 <> "." <> toBs d1)
+        idleTime= (toBs n2 <> "." <> toBs d2)
+    in  AllowedUptime
+            (upTime <> BS.pack " " <> idleTime <> BS.pack "\n")
+            (Uptime upTime idleTime)
 
-propUptime :: Uptime -> Bool
-propUptime uptime@(Uptime d1 d2) =
-    run uptimep (d1 <> BS.pack " " <> d2 <> BS.pack "\n") == Just uptime
+propUptime :: AllowedUptime -> Bool
+propUptime (AllowedUptime bs uptime) =
+    run uptimep bs == Just uptime
 
 
 -------------------------------------------------------------------------------
