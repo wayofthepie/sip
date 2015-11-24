@@ -473,10 +473,22 @@ commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 --  [("rchar","12983399"),("wchar","14957379"), ...]
 --
 -- @
-iop :: Parser [(ByteString, ByteString)]
-iop = manyTill ((,) <$> idp <*> ( skipJustSpacep *> intp <* skipMany space )  ) endOfInput
 
+data ProcIO = ProcIO
+    { _rchar        :: ByteString
+    , _wchar        :: ByteString
+    , _syscr        :: ByteString
+    , _syscw        :: ByteString
+    , _readBytes    :: ByteString
+    , _writeBytes   :: ByteString
+    , _cancelledWriteBytes :: ByteString
+    } deriving (Eq, Show)
 
+iop :: Parser ProcIO
+iop = ProcIO <$> rowp <*> rowp <*> rowp <*> rowp
+    <*> rowp <*> rowp <*> rowp <* endOfInput
+  where
+    rowp = idp *> ( skipJustSpacep *> intp <* skipMany space )
 
 -------------------------------------------------------------------------------
 -- | Parser for __\/proc\/[pid]\/maps__.
