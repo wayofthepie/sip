@@ -26,7 +26,15 @@ unitTests =
 
 qcProps :: TestTree
 qcProps = testGroup "quickcheck parser tests"
-    [ testProperty "uptime parser" propUptime ]
+    [ testProperty "/proc/uptime parser" propUptimep
+    , testProperty "/proc/comm parser" propCommp
+    ]
+
+
+run :: Parser a -> BS.ByteString -> Maybe a
+run p input = case parseOnly p input of
+    Right x -> Just x
+    Left _  -> Nothing
 
 
 parserTest ::
@@ -201,13 +209,8 @@ expectedLoadAvgpData = LoadAvg
     }
 
 -------------------------------------------------------------------------------
--- Tests for /proc/loadavg parser.
+-- Tests for /proc/uptime parser.
 -------------------------------------------------------------------------------
-run :: Parser a -> BS.ByteString -> Maybe a
-run p input = case parseOnly p input of
-    Right x -> Just x
-    Left _  -> Nothing
-
 data AllowedUptime = AllowedUptime
     { uptimeBS      :: BS.ByteString
     -- ^ The string to parse
@@ -231,9 +234,27 @@ allowedUptimeFromInts n1 d1 n2 d2 =
             (upTime <> BS.pack " " <> idleTime <> BS.pack "\n")
             (Uptime upTime idleTime)
 
-propUptime :: AllowedUptime -> Bool
-propUptime (AllowedUptime bs uptime) =
+propUptimep :: AllowedUptime -> Bool
+propUptimep (AllowedUptime bs uptime) =
     run uptimep bs == Just uptime
+
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/[pid]/comm parser.
+-------------------------------------------------------------------------------
+newtype AllowedComm = AllowedComm
+    { unwrapComm :: BS.ByteString
+    } deriving (Eq, Show)
+
+instance Arbitrary AllowedComm where
+    arbitrary =
+        let genAllowedChar = elements $
+                ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ ":/"
+            genAllowedString = BS.pack <$> listOf1 genAllowedChar
+        in  AllowedComm <$> genAllowedString
+
+propCommp :: AllowedComm -> Bool
+propCommp (AllowedComm bs) = run commp bs == Just bs
 
 
 -------------------------------------------------------------------------------
