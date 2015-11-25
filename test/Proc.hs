@@ -31,6 +31,7 @@ qcProps = testGroup "quickcheck parser tests"
     [ testProperty "/proc/uptime parser" propUptimep
     , testProperty "/proc/comm parser" propCommp
     , testProperty "/proc/[pid]/io parser" propProcIOp
+    , testProperty "/proc/[pid]/environ parser" propEnviron
     ]
 
 
@@ -307,6 +308,17 @@ data AllowedEnviron = AllowedEnviron
     , actualEnviron :: M.Map BS.ByteString BS.ByteString
     } deriving (Eq, Show)
 
+instance Arbitrary AllowedEnviron where
+    arbitrary = do
+        let size = 100
+        vars <- listOf $ resize size genVar
+        vals <- listOf $ resize size genVarValue
+        let genData =
+                mconcat $ zipWith (\a b -> a <> "=" <> b <> "\0") vars vals
+        let allowedEnvironFrom = M.fromList $ zip vars vals
+        return $ AllowedEnviron genData allowedEnvironFrom
+
+
 genUpperLowerChar :: Gen Char
 genUpperLowerChar = elements $ ['a'..'z'] ++ ['A'..'Z']
 
@@ -314,22 +326,44 @@ gen0Or9 :: Gen Int
 gen0Or9 = choose(0,9)
 
 -- | Generate variable names of the form "P1b4RE=". All generated variable
--- names start with an upper or lower case letter and end with an "=", the
--- symbols between these can be digits, upper case letters or lower case
--- letters.
+-- names start with an upper or lower case letter, the symbols after this
+-- can be digits, upper case letters or lower case letters.
 genVar :: Gen BS.ByteString
 genVar = do
     genC <- genUpperLowerChar
     genN <- gen0Or9
-    BS.pack <$> ( fmap (\str -> appendEquals $ genC : str) $
-        genVarName [genC] [genN] )
+    BS.pack <$> ( fmap (genC :) $ genVarName [genC] [genN] )
   where
-    genVarName chars nums = listOf1. elements $
-        chars ++ (intercalate "" $ show <$> nums)
+    genVarName chars nums = listOf1 . elements $
+        chars ++ ( intercalate "" $ show <$> nums )
 
-    appendEquals :: String -> String
-    appendEquals varName = varName ++ "="
 
+-- | Generate variable assignments of the form "varname=varvalue\NUL" -
+-- note that "\NUL" is the separator between variable assignments
+-- in /proc/[pid]/environ.
+--
+genVarAssign :: Gen BS.ByteString -> Gen BS.ByteString -> Gen BS.ByteString
+genVarAssign gvar gval = do
+    varVal <- gval
+    var    <- gvar
+    return $ var <> "=" <> varVal
+
+
+-- | Generate the value for variables.
+--
+-- TODO : There must be a way of generating a string from a regex
+-- as this likely does not contain all possible characters allowed
+-- in a variable value.
+--
+-- TODO : Does not yet include the single and double quote characters
+-- " and ' respectively.
+genVarValue :: Gen BS.ByteString
+genVarValue = BS.pack <$> ( listOf1 . elements $ ['a'..'z'] ++ ['A'..'Z'] ++
+        ",.<>/?;#:@~[]{}-_+()*&^%$£!¬`|\\" )
+
+
+propEnviron :: AllowedEnviron -> Bool
+propEnviron (AllowedEnviron bs environ) = run environp bs == Just environ
 
 -------------------------------------------------------------------------------
 -- Tests for /proc/[pid]/statm parser.
