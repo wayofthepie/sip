@@ -3,8 +3,10 @@
     #-}
 module Proc where
 
-import qualified Data.ByteString.Char8 as BS
 import Data.Attoparsec.ByteString.Char8
+import qualified Data.ByteString.Char8 as BS
+import Data.List (intercalate)
+import qualified Data.Map as M
 import Data.Monoid
 
 import Test.Tasty
@@ -262,7 +264,7 @@ propCommp (AllowedComm bs) = run commp bs == Just bs
 -- Tests for /proc/[pid]/io parser.
 -------------------------------------------------------------------------------
 data AllowedProcIO = AllowedProcIO
-    { unwrapProcIO :: BS.ByteString
+    { procIOData :: BS.ByteString
     , actualProcIO :: ProcIO
     } deriving (Eq, Show)
 
@@ -295,6 +297,38 @@ allowedProcIOFromInts rc wc sw sr rb wb cwb =
 
 propProcIOp :: AllowedProcIO -> Bool
 propProcIOp (AllowedProcIO bs procIo) = run iop bs == Just procIo
+
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/[pid]/environ parser.
+-------------------------------------------------------------------------------
+data AllowedEnviron = AllowedEnviron
+    { environData   :: BS.ByteString
+    , actualEnviron :: M.Map BS.ByteString BS.ByteString
+    } deriving (Eq, Show)
+
+genUpperLowerChar :: Gen Char
+genUpperLowerChar = elements $ ['a'..'z'] ++ ['A'..'Z']
+
+gen0Or9 :: Gen Int
+gen0Or9 = choose(0,9)
+
+-- | Generate variable names of the form "P1b4RE=". All generated variable
+-- names start with an upper or lower case letter and end with an "=", the
+-- symbols between these can be digits, upper case letters or lower case
+-- letters.
+genVar :: Gen BS.ByteString
+genVar = do
+    genC <- genUpperLowerChar
+    genN <- gen0Or9
+    BS.pack <$> ( fmap (\str -> appendEquals $ genC : str) $
+        genVarName [genC] [genN] )
+  where
+    genVarName chars nums = listOf1. elements $
+        chars ++ (intercalate "" $ show <$> nums)
+
+    appendEquals :: String -> String
+    appendEquals varName = varName ++ "="
 
 
 -------------------------------------------------------------------------------
