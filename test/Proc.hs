@@ -3,11 +3,13 @@
     #-}
 module Proc where
 
-import qualified Data.ByteString as BS
-import Data.Attoparsec.ByteString
+import qualified Data.ByteString.Char8 as BS
+import Data.Attoparsec.ByteString.Char8
+import Data.Monoid
 
 import Test.Tasty
 import Test.Tasty.HUnit
+import Test.Tasty.QuickCheck as QC
 
 import Linux.Parser.Internal.Proc
 
@@ -19,7 +21,21 @@ unitTests =
         , testCase "Test /proc/meminfo parser" testMemInfop
         , testCase "Test /proc/[pid]/stat parser" testProcStatp
         , testCase "Test /proc/[pid]/statm parser" testStatmp
+        , testCase "Test /proc/loadavg parser" testLoadAvgp
         ]
+
+qcProps :: TestTree
+qcProps = testGroup "quickcheck parser tests"
+    [ testProperty "/proc/uptime parser" propUptimep
+    , testProperty "/proc/comm parser" propCommp
+    , testProperty "/proc/[pid]/io parser" propProcIOp
+    ]
+
+
+run :: Parser a -> BS.ByteString -> Maybe a
+run p input = case parseOnly p input of
+    Right x -> Just x
+    Left _  -> Nothing
 
 
 parserTest ::
@@ -98,15 +114,14 @@ expectedMemInfopData = [ MemInfo
 -- Tests for /proc/[pid]/stat parser.
 -------------------------------------------------------------------------------
 testProcStatp :: IO ()
-testProcStatp = parserTest mapsp
-    "test/data/proc_pid_maps"
+testProcStatp = parserTest procstatp
+    "test/data/proc_pid_stat"
     verify
-    expectedMapspData
-    "Parsing test/data/proc_pid_maps failed!"
+    expectedProcStatpData
+    "Parsing test/data/proc_pid_stat failed!"
   where
     verify a e = assertEqual
         "/proc/[pid]/stat parser returned incorrect value!" a e
-
 
 
 expectedProcStatpData :: ProcessStat
@@ -164,6 +179,122 @@ expectedProcStatpData = ProcessStat
     , _env_end      = "140722636496874"
     , _exit_code    = "0"
     }
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/loadavg parser.
+-------------------------------------------------------------------------------
+testLoadAvgp :: IO ()
+testLoadAvgp = parserTest loadavgp
+    "test/data/proc_loadavg"
+    verify
+    expectedLoadAvgpData
+    "Parsing test/data/proc_loadavg failed!"
+  where
+    verify actual expected = do
+        assertEqual "1 min run queue incorrect" (_runQLen1 actual) (_runQLen1 expected)
+        assertEqual "5 min run queue incorrect" (_runQLen5 actual) (_runQLen5 expected)
+        assertEqual "15 min run queue incorrect" (_runQLen15 actual) (_runQLen15 expected)
+        assertEqual "runnable incorrect" (_runnable actual) (_runnable expected)
+        assertEqual "exists incorrect" (_exists actual) (_exists expected)
+        assertEqual "latest pid incorrect" (_latestPid actual) (_latestPid expected)
+
+
+expectedLoadAvgpData :: LoadAvg
+expectedLoadAvgpData = LoadAvg
+    { _runQLen1 = "0.20"
+    , _runQLen5 = "0.15"
+    , _runQLen15= "0.07"
+    , _runnable = "1"
+    , _exists   = "537"
+    , _latestPid= "163"
+    }
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/uptime parser.
+-------------------------------------------------------------------------------
+data AllowedUptime = AllowedUptime
+    { uptimeBS      :: BS.ByteString
+    -- ^ The string to parse
+    , actualUptime  :: Uptime
+    -- ^ What the Uptime should be if the generated string is parsed
+    } deriving (Eq, Show)
+
+instance Arbitrary AllowedUptime where
+    arbitrary = allowedUptimeFromInts
+        <$> choose (0,1000000)
+        <*> choose (0,99)
+        <*> choose (0,1000000)
+        <*> choose (0,99)
+
+allowedUptimeFromInts :: Int -> Int -> Int -> Int -> AllowedUptime
+allowedUptimeFromInts n1 d1 n2 d2 =
+    let toBs    = BS.pack . show
+        upTime  = (toBs n1 <> "." <> toBs d1)
+        idleTime= (toBs n2 <> "." <> toBs d2)
+    in  AllowedUptime
+            (upTime <> BS.pack " " <> idleTime <> BS.pack "\n")
+            (Uptime upTime idleTime)
+
+propUptimep :: AllowedUptime -> Bool
+propUptimep (AllowedUptime bs uptime) =
+    run uptimep bs == Just uptime
+
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/[pid]/comm parser.
+-------------------------------------------------------------------------------
+newtype AllowedComm = AllowedComm
+    { unwrapComm :: BS.ByteString
+    } deriving (Eq, Show)
+
+instance Arbitrary AllowedComm where
+    arbitrary =
+        let genAllowedChar = elements $
+                ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ ":/"
+            genAllowedString = BS.pack <$> listOf1 genAllowedChar
+        in  AllowedComm <$> genAllowedString
+
+propCommp :: AllowedComm -> Bool
+propCommp (AllowedComm bs) = run commp bs == Just bs
+
+
+-------------------------------------------------------------------------------
+-- Tests for /proc/[pid]/io parser.
+-------------------------------------------------------------------------------
+data AllowedProcIO = AllowedProcIO
+    { unwrapProcIO :: BS.ByteString
+    , actualProcIO :: ProcIO
+    } deriving (Eq, Show)
+
+instance Arbitrary AllowedProcIO where
+    arbitrary = allowedProcIOFromInts
+        <$> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+        <*> choose (0, 1000000)
+
+
+allowedProcIOFromInts ::
+     Int -> Int -> Int -> Int -> Int -> Int -> Int -> AllowedProcIO
+allowedProcIOFromInts rc wc sw sr rb wb cwb =
+    let toBs  = BS.pack . show
+        bsGen =
+            "rchar:" <> toBs rc <> "\n" <>
+            "wchar:" <> toBs wc <> "\n" <>
+            "syscr:" <> toBs sw <> "\n" <>
+            "syscw:" <> toBs sr <> "\n" <>
+            "read_bytes:"   <> toBs rb <> "\n" <>
+            "write_bytes:"  <> toBs wb <> "\n" <>
+            "cancelled_write_bytes:" <> toBs cwb <> "\n"
+        procIOgen = ProcIO (toBs rc) (toBs wc) (toBs sw)
+            (toBs sr) (toBs rb) (toBs wb) (toBs cwb)
+    in  AllowedProcIO bsGen procIOgen
+
+propProcIOp :: AllowedProcIO -> Bool
+propProcIOp (AllowedProcIO bs procIo) = run iop bs == Just procIo
 
 
 -------------------------------------------------------------------------------

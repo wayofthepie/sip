@@ -11,48 +11,24 @@ module Linux.Parser.Internal.Proc
     ( -- * Data Types
     -- ** MappedMemory : \/proc\/[pid]\/maps
       MappedMemory (..)
-    , mmAddress
-    , mmPerms
-    , mmOffset
-    , mmDev
-    , mmInode
-    , mmPathname
 
     -- ** Limits : \/proc\/[pid]\/limits
     , Limit ()
-    , limitName
-    , softLimit
-    , hardLimit
-    , unitOfLimit
 
     -- ** Statm : \/proc\/[pid]\/statm
     , Statm (..)
-    , statmSize
-    , statmResident
-    , statmShare
-    , statmText
-    , statmLib
-    , statmData
-    , statmDt
 
     -- ** MountInfo : \/proc\/[pid]\/mountinfo
     , MountInfo ()
-    , miMountId
-    , miParentId
-    , miDevMajMinNum
-    , miRoot
-    , miMountPoint
-    , miMountOptions
-    , miOptionalFields
-    , miFsType
-    , miMountSource
-    , miSuperOptions
 
     -- * MemInfo : \/proc\/meminfo
     , MemInfo (..)
 
     -- * ProcessStat : \/proc\/\[pid\]\/stat
     , ProcessStat (..)
+    , LoadAvg (..)
+    , Uptime (..)
+    , ProcIO (..)
 
     -- * Parsers
     , meminfop
@@ -95,13 +71,6 @@ data MappedMemory = MappedMemory
     , _pathname:: Maybe ByteString
     } deriving (Eq, Show)
 
-mmAddress  = _address
-mmPerms    = _perms
-mmOffset   = _offset
-mmDev      = _dev
-mmInode    = _inode
-mmPathname = _pathname
-
 
 -- | Data type for __\/proc\/[pid]\/limits__.
 data Limit = Limit
@@ -110,11 +79,6 @@ data Limit = Limit
     , _hlimit :: ByteString
     , _unit   :: Maybe ByteString
     } deriving (Eq, Show)
-
-limitName   = _limit
-softLimit   = _slimit
-hardLimit   = _hlimit
-unitOfLimit = _unit
 
 
 -- | Data type for __\/proc\/[pid]\/statm__.
@@ -128,14 +92,6 @@ data Statm = Statm
     , _dt         :: ByteString
     } deriving (Eq, Show)
 
-
-statmSize       = _size
-statmResident   = _resident
-statmShare      = _share
-statmText       = _text
-statmLib        = _lib
-statmData       = _data
-statmDt         = _dt
 
 
 -- Data type for __\/proc\/[pid]\/mountinfo__.
@@ -151,18 +107,6 @@ data MountInfo = MountInfo
     , _mountsource    :: ByteString
     , _superoptions   :: [ByteString]
     } deriving (Eq, Show)
-
-
-miMountId       = _mountid
-miParentId      = _parentid
-miDevMajMinNum  = _devmajmin
-miRoot          = _root
-miMountPoint    = _mountpoint
-miMountOptions  = _mountopts
-miOptionalFields= _optionalfields
-miFsType        = _fstype
-miMountSource   = _mountsource
-miSuperOptions  = _superoptions
 
 
 data MemInfo = MemInfo
@@ -403,9 +347,24 @@ statmp = Statm
 --
 --  ("0.00","0.01","0.05")
 -- @
-loadavgp :: Parser (ByteString, ByteString, ByteString)
-loadavgp = (,,) <$> doublep <*> doublep <*> doublep
 
+data LoadAvg = LoadAvg
+    { _runQLen1 :: ByteString
+    , _runQLen5 :: ByteString
+    , _runQLen15:: ByteString
+    , _runnable :: ByteString
+    , _exists   :: ByteString
+    , _latestPid:: ByteString
+    } deriving (Eq, Show)
+
+loadavgp :: Parser LoadAvg
+loadavgp = LoadAvg <$>
+    doublep
+    <*> doublep
+    <*> doublep
+    <*> intp <* char '/' <* skipJustSpacep
+    <*> intp <* skipJustSpacep
+    <*> intp
 
 
 ------------------------------------------------------------------------------
@@ -420,9 +379,14 @@ loadavgp = (,,) <$> doublep <*> doublep <*> doublep
 --
 --  ("13048.12","78085.17")
 -- @
-uptimep :: Parser (ByteString, ByteString)
-uptimep = (,) <$> doublep <*> doublep
 
+data Uptime = Uptime
+    { _upSec    :: ByteString
+    , _idleTime :: ByteString
+    } deriving (Eq,Show)
+
+uptimep :: Parser Uptime
+uptimep = Uptime <$> doublep <*> doublep
 
 
 ------------------------------------------------------------------------------
@@ -451,9 +415,22 @@ commp = takeWhile ( inClass "a-zA-Z0-9:/" )
 --  [("rchar","12983399"),("wchar","14957379"), ...]
 --
 -- @
-iop :: Parser [(ByteString, ByteString)]
-iop = manyTill ((,) <$> idp <*> ( skipJustSpacep *> intp <* skipMany space )  ) endOfInput
 
+data ProcIO = ProcIO
+    { _rchar        :: ByteString
+    , _wchar        :: ByteString
+    , _syscr        :: ByteString
+    , _syscw        :: ByteString
+    , _readBytes    :: ByteString
+    , _writeBytes   :: ByteString
+    , _cancelledWriteBytes :: ByteString
+    } deriving (Eq, Show)
+
+iop :: Parser ProcIO
+iop = ProcIO <$> rowp <*> rowp <*> rowp <*> rowp
+    <*> rowp <*> rowp <*> rowp <* endOfInput
+  where
+    rowp = idp *> ( skipJustSpacep *> intp <* skipMany space )
 
 
 -------------------------------------------------------------------------------
