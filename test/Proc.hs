@@ -31,7 +31,7 @@ qcProps = testGroup "quickcheck parser tests"
     [ testProperty "/proc/uptime parser" propUptimep
     , testProperty "/proc/comm parser" propCommp
     , testProperty "/proc/[pid]/io parser" propProcIOp
-    , testProperty "/proc/[pid]/environ parser" propEnviron
+--    , testProperty "/proc/[pid]/environ parser" propEnviron
     ]
 
 
@@ -357,6 +357,9 @@ genVarAssign gvar gval = do
 --
 -- TODO : Does not yet include the single and double quote characters
 -- " and ' respectively.
+--
+-- TODO : Incorrect!! There are quite a lot of rules for values that
+-- we must take into account here.
 genVarValue :: Gen BS.ByteString
 genVarValue = BS.pack <$> ( listOf1 . elements $ ['a'..'z'] ++ ['A'..'Z'] ++
         ",.<>/?;#:@~[]{}-_+()*&^%$£!¬`|\\" )
