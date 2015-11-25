@@ -50,6 +50,7 @@ import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.Maybe
 import Data.ByteString hiding (takeWhile, count, foldl)
+import qualified Data.Map as Map
 
 import Prelude hiding (takeWhile)
 
@@ -485,8 +486,8 @@ mapsrowp = MappedMemory
 --  [("LANG","en_IE.UTF-8"),("PATH","/usr/local/sbin"), ...]
 -- @
 
-environp :: Parser [(ByteString, ByteString)]
-environp = sepBy environrowp $ char '\NUL'
+environp :: Parser (Map.Map ByteString ByteString) --[(ByteString, ByteString)]
+environp = Map.fromList <$> ( sepBy environrowp $ char '\NUL' )
 
 environrowp :: Parser (ByteString, ByteString)
 environrowp = (,) <$>
