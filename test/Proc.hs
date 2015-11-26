@@ -325,7 +325,7 @@ genUpperLowerChar = elements $ ['a'..'z'] ++ ['A'..'Z']
 gen0Or9 :: Gen Int
 gen0Or9 = choose(0,9)
 
--- | Generate variable names of the form "P1b4RE=". All generated variable
+-- | Generate variable names of the form "P1b4RE". All generated variable
 -- names start with an upper or lower case letter, the symbols after this
 -- can be digits, upper case letters or lower case letters.
 genVar :: Gen BS.ByteString
@@ -355,14 +355,9 @@ genVarAssign gvar gval = do
 -- as this likely does not contain all possible characters allowed
 -- in a variable value.
 --
--- TODO : Does not yet include the single and double quote characters
--- " and ' respectively.
---
--- TODO : Incorrect!! There are quite a lot of rules for values that
--- we must take into account here.
 genVarValue :: Gen BS.ByteString
 genVarValue = BS.pack <$> ( listOf1 . elements $ ['a'..'z'] ++ ['A'..'Z'] ++
-        ",.<>/?;#:@~[]{}-_+()*&^%$£!¬`|\\" )
+        ",.<>/?;#:@~[]{}-_+()*&^%$£!¬`|\\'\"" )
 
 
 propEnviron :: AllowedEnviron -> Bool
