@@ -22,6 +22,7 @@ library
                         Linux.Parser.Internal.Lsof,
                         Linux.Parser.Internal.Proc,
                         Linux.Parser.Internal.ProcNet
+                        Linux.Parser.Internal.Numa
 
   -- other-modules:
   -- other-extensions:
@@ -44,6 +45,7 @@ test-suite parser-tests
   other-modules:
     Proc
     , ProcNet
+    , Linux.Parser.Internal.Numa
 
   hs-source-dirs:     test
   build-depends:

@@ -25,3 +25,10 @@ intp = takeWhile $ inClass "0-9"
 -- | Parse a line, throw away the result
 skipLinep :: Parser ()
 skipLinep = skipWhile ( notInClass "\r\n" ) >> endOfLine
+
+-- | Parse hexadecimal
+hdp :: Parser ByteString
+hdp = takeWhile $ inClass "0-9a-f"
+
+
+
