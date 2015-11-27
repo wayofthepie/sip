@@ -6,7 +6,7 @@ import Control.Applicative hiding (empty)
 import Data.Attoparsec.Combinator
 import Data.Attoparsec.ByteString.Char8
 import Data.ByteString hiding (takeWhile, count, foldl)
-
+import qualified Data.Map as Map
 import Prelude hiding (takeWhile)
 
 import Linux.Parser.Internal.Common
@@ -27,16 +27,25 @@ import Linux.Parser.Internal.Common
 
 
 data NumaMap = NumaMap
-    { memStart :: ByteString
-    , memPolicy:: ByteString
-    , mappingDetails :: ByteString
+    { memStart       :: ByteString
+    , memPolicy      :: ByteString
+    , mappingDetails :: Map.Map ByteString ByteString
     } deriving (Eq, Show)
 
-numamapsp :: Parser [(ByteString, ByteString, [ByteString])]
-numamapsp = manyTill ( (,,)
+numamapsp :: Parser [NumaMap]
+numamapsp = sepBy ( NumaMap
     <$> ( hdp <* skipJustSpacep )
     <*> ( takeWhile ( inClass "a-zA-Z" ) <* skipJustSpacep )
-    <*> ( sepBy ( takeWhile $ inClass "-a-zA-Z0-9=/." ) $ char ' ' )
-    <*  endOfLine ) endOfInput
+    <*> option Map.empty parseMappingDetails ) endOfLine
+
+parseMappingDetails :: Parser ( Map.Map ByteString ByteString )
+parseMappingDetails = Map.fromList <$> ( sepBy parseMappingDetail $ char ' ' )
+  where
+    parseMappingDetail = (,)
+        <$> ( ( takeTill $ inClass "=" ) <* char '=' )
+        <*> ( takeTill $ inClass " \n" )
+
+
+
 
 
