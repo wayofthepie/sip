@@ -355,9 +355,14 @@ genVarAssign gvar gval = do
 -- as this likely does not contain all possible characters allowed
 -- in a variable value.
 --
+-- TODO : Does not yet include the single and double quote characters
+-- " and ' respectively.
+--
+-- TODO : Incorrect!! There are quite a lot of rules for values that
+-- we must take into account here.
 genVarValue :: Gen BS.ByteString
 genVarValue = BS.pack <$> ( listOf1 . elements $ ['a'..'z'] ++ ['A'..'Z'] ++
-        ",.<>/?;#:@~[]{}-_+()*&^%$£!¬`|\\'\"" )
+        ",.<>/?;#:@~[]{}-_+()*&^%$£!¬`|\\" )
 
 
 propEnviron :: AllowedEnviron -> Bool
